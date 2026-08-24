@@ -1,0 +1,276 @@
+@using Dukan.Web.Application.DTOs
+@using Dukan.Web.Application.Interfaces
+@using Dukan.Web.Domain.Entities
+@model FirebaseConfigForm
+@{
+    ViewData["Title"] = "تهيئة Firebase";
+    var dto = ViewData["FirebaseDto"] as FirebaseConfigDto;
+    var selectedSubscription = ViewData["SelectedSubscription"] as Subscription;
+    var selectedSubscriptionId = ViewData["SelectedSubscriptionId"] as Guid?;
+    var subscriptionList = ViewData["SubscriptionList"] as List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>;
+    // Legacy fallback
+    var selectedCustomer = ViewData["SelectedCustomer"] as Customer;
+    var selectedCustomerId = ViewData["SelectedCustomerId"] as Guid?;
+    var customerList = ViewData["CustomerList"] as List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>;
+    var displayList = subscriptionList ?? customerList;
+    var displaySelectedId = selectedSubscriptionId ?? selectedCustomerId;
+    var displaySubscription = selectedSubscription;
+    var displayName = selectedSubscription != null ? $"{selectedSubscription.Customer.FullName} - {selectedSubscription.Plan.Name}" : selectedCustomer?.FullName;
+}
+
+<div class="mb-4">
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            <label class="form-label fw-bold">اختر الاشتراك (كل اشتراك له مشروع Firebase منفصل)</label>
+            <form method="get" asp-area="Admin" asp-controller="FirebaseConfig" asp-action="Index" class="d-flex gap-2">
+                <select id="subscriptionSelector" name="subscriptionId" class="form-select" style="max-width: 500px;" onchange="this.form.submit()">
+                    <option value="">-- اختر الاشتراك --</option>
+                    @if (displayList != null)
+                    {
+                        foreach (var item in displayList)
+                        {
+                            if (displaySelectedId?.ToString() == item.Value)
+                            {
+                                <option value="@item.Value" selected>@item.Text</option>
+                            }
+                            else
+                            {
+                                <option value="@item.Value">@item.Text</option>
+                            }
+                        }
+                    }
+                </select>
+                <a href="@Url.Action("Index", "FirebaseConfig", new { area = "Admin" })" class="btn btn-outline-secondary">عرض الكل</a>
+                <noscript><button type="submit" class="btn btn-primary">اختر</button></noscript>
+            </form>
+            @if (displaySubscription != null)
+            {
+                <div class="alert alert-info mt-3 mb-0">
+                    <i class="bi bi-receipt me-1"></i> الاشتراك المحدد: <strong>@displaySubscription.Customer.FullName</strong> — @displaySubscription.Customer.StoreName — <span class="badge bg-light text-dark border">@displaySubscription.Plan.Name</span>
+                    <small class="text-muted ms-2">(@displaySelectedId)</small>
+                    <a asp-area="Admin" asp-controller="Subscriptions" asp-action="Details" asp-route-id="@displaySubscription.Id" class="ms-2">عرض الاشتراك</a>
+                    <a asp-area="Admin" asp-controller="Customers" asp-action="Details" asp-route-id="@displaySubscription.CustomerId" class="ms-2">عرض العميل</a>
+                </div>
+            }
+            else if (selectedCustomer != null)
+            {
+                <div class="alert alert-info mt-3 mb-0">
+                    <i class="bi bi-person me-1"></i> العميل المحدد: <strong>@selectedCustomer.FullName</strong> — @selectedCustomer.Phone
+                    <a asp-area="Admin" asp-controller="Customers" asp-action="Details" asp-route-id="@selectedCustomer.Id" class="ms-2">عرض العميل</a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@if (displaySelectedId == null || displaySelectedId == Guid.Empty)
+{
+    <div class="alert alert-warning">
+        <i class="bi bi-arrow-up me-1"></i> اختر اشتراكاً من القائمة أعلاه لتهيئة Firebase الخاص به. كل اشتراك يملك ملف Service Account منفصل ويجب أن يكون <code>project_id</code> فريد.
+    </div>
+}
+else
+{
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-google me-2"></i>ملف Service Account JSON — @displayName</h5>
+                <small class="text-muted">الصق محتوى ملف <code>*-firebase-adminsdk-*.json</code> كاملاً للاشتراك <strong>@displayName</strong>. سيتم حفظه في قاعدة البيانات واستخدامه لإدارة Remote Config لهذا الاشتراك فقط. يجب أن يكون <code>project_id</code> فريد لكل اشتراك.</small>
+            </div>
+            <div class="card-body">
+                <form asp-area="Admin" asp-controller="FirebaseConfig" asp-action="Save" asp-route-subscriptionId="@displaySelectedId" method="post" id="firebaseForm">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="CredentialJson" class="form-label">محتوى JSON <span class="text-danger">*</span></label>
+                        <textarea asp-for="CredentialJson" class="form-control font-monospace" rows="14" dir="ltr" placeholder="الصق محتوى ملف JSON هنا" id="credentialJson"></textarea>
+                        <span asp-validation-for="CredentialJson" class="text-danger small"></span>
+                        <div class="form-text">
+                            انسخ الملف كاملاً من Firebase Console &gt; Project Settings &gt; Service accounts &gt; Generate new private key.
+                            <br />لن يتم عرض المفتاح بعد الحفظ لأسباب أمنية. كل اشتراك يجب أن يستخدم مشروع Firebase مختلف.
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save me-1"></i> حفظ في قاعدة البيانات
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" id="testBtn">
+                            <span class="spinner-border spinner-border-sm d-none" id="testSpinner"></span>
+                            <i class="bi bi-wifi me-1"></i> اختبار الاتصال
+                        </button>
+                    </div>
+                </form>
+                <div class="alert mt-3 d-none" id="testAlert" role="alert"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h6 class="mb-0">الحالة الحالية</h6>
+            </div>
+            <div class="card-body">
+                @if (dto is null || !dto.HasCredential)
+                {
+                    <div class="alert alert-warning mb-0">
+                        <i class="bi bi-exclamation-triangle me-1"></i> لم يتم حفظ أي إعدادات لهذا الاشتراك بعد.
+                        <div class="small mt-1">بعد الحفظ ستظهر هنا معلومات المشروع.</div>
+                    </div>
+                }
+                else
+                {
+                    <dl class="mb-0 small">
+                        <dt>Project ID</dt>
+                        <dd><code>@dto.ProjectId</code></dd>
+                        <dt>Client Email</dt>
+                        <dd class="text-break" dir="ltr">@dto.ClientEmail</dd>
+                        <dt>الاشتراك</dt>
+                        <dd>@dto.CustomerName — @dto.StoreName — @dto.PlanName</dd>
+                        <dt>المعاينة</dt>
+                        <dd class="text-muted" dir="ltr">@dto.MaskedJsonPreview</dd>
+                        <dt>آخر تحديث</dt>
+                        <dd>@dto.UpdatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</dd>
+                        <dt>الحالة</dt>
+                        <dd>
+                            @if (dto.Enabled)
+                            {
+                                <span class="badge bg-success">مفعل</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">معطل</span>
+                            }
+                        </dd>
+                    </dl>
+                    <hr />
+                    <form asp-area="Admin" asp-controller="FirebaseConfig" asp-action="Delete" asp-route-subscriptionId="@displaySelectedId" method="post" id="deleteFirebaseForm">
+                        @Html.AntiForgeryToken()
+                        <button type="button" class="btn btn-outline-danger btn-sm w-100" id="triggerDeleteFirebaseBtn">
+                            <i class="bi bi-trash me-1"></i> حذف الإعدادات
+                        </button>
+                    </form>
+                    <a asp-area="Admin" asp-controller="RemoteConfig" asp-action="Index" asp-route-subscriptionId="@displaySelectedId" class="btn btn-primary btn-sm w-100 mt-2">
+                        <i class="bi bi-sliders me-1"></i> الانتقال لإدارة المعاملات
+                    </a>
+                }
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mt-3">
+            <div class="card-body small text-muted">
+                <strong>ملاحظات أمان:</strong>
+                <ul class="mb-0 ps-3">
+                    <li>لا تحفظ الملف في <code>appsettings.json</code> أو Git.</li>
+                    <li>Service Account يحتاج دور <code>Firebase Remote Config Admin</code> فقط.</li>
+                    <li>كل اشتراك يجب أن يستخدم <code>project_id</code> فريد (مُقيّد في قاعدة البيانات).</li>
+                    <li>الوصول لهذه الصفحة محصور بدور <code>Admin</code> فقط.</li>
+                    <li>يمكنك تغيير الملف في أي وقت بلصق JSON جديد وحفظه.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+}
+<!-- تأكيد حذف إعدادات Firebase -->
+<div class="modal fade" id="deleteFirebaseModal" tabindex="-1" aria-labelledby="deleteFirebaseModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 overflow-hidden">
+            <div class="modal-header plan-modal-header-danger">
+                <div class="d-flex align-items-center gap-3">
+                    <span class="plan-modal-header-icon" aria-hidden="true"><i class="bi bi-trash3"></i></span>
+                    <div>
+                        <h5 class="modal-title mb-0" id="deleteFirebaseModalTitle">حذف إعدادات Firebase</h5>
+                        <p class="plan-modal-subtitle mb-0">لا يمكن التراجع عن هذا الإجراء.</p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0">هل أنت متأكد من حذف إعدادات Firebase لهذا الاشتراك؟ ستحتاج لإعادة لصق ملف Service Account JSON وستتعطل إدارة Remote Config حتى إعادة التهيئة.</p>
+            </div>
+            <div class="modal-footer bg-body-tertiary">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteFirebaseBtn">
+                    <span class="spinner-border spinner-border-sm me-1 d-none" id="confirmDeleteFirebaseSpinner" aria-hidden="true"></span>
+                    حذف
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            const testBtn = document.getElementById('testBtn');
+            const spinner = document.getElementById('testSpinner');
+            const alertEl = document.getElementById('testAlert');
+            const form = document.getElementById('firebaseForm');
+            const token = form?.querySelector('input[name="__RequestVerificationToken"]')?.value;
+
+            function showTestAlert(type, msg) {
+                alertEl.className = 'alert mt-3 alert-' + type;
+                alertEl.textContent = msg;
+                alertEl.classList.remove('d-none');
+                if (type === 'success') {
+                    setTimeout(() => {
+                        alertEl.style.transition = 'opacity 0.4s';
+                        alertEl.style.opacity = '0';
+                        setTimeout(() => { alertEl.classList.add('d-none'); alertEl.style.opacity = ''; }, 400);
+                    }, 5000);
+                }
+            }
+
+            testBtn?.addEventListener('click', async () => {
+                testBtn.disabled = true;
+                spinner.classList.remove('d-none');
+                alertEl.classList.add('d-none');
+                alertEl.style.opacity = '';
+                try {
+                    const url = '@Url.Action("Test", "FirebaseConfig", new { area = "Admin", subscriptionId = displaySelectedId })';
+                    const res = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'RequestVerificationToken': token,
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                        body: '__RequestVerificationToken=' + encodeURIComponent(token)
+                    });
+                    const data = await res.json();
+                    showTestAlert(data.success ? 'success' : 'danger', data.message);
+                } catch (e) {
+                    showTestAlert('danger', 'فشل الاختبار: ' + e.message);
+                } finally {
+                    testBtn.disabled = false;
+                    spinner.classList.add('d-none');
+                }
+            });
+
+            const deleteForm = document.getElementById('deleteFirebaseForm');
+            const triggerBtn = document.getElementById('triggerDeleteFirebaseBtn');
+            const confirmBtn = document.getElementById('confirmDeleteFirebaseBtn');
+            const confirmSpinner = document.getElementById('confirmDeleteFirebaseSpinner');
+            const modalEl = document.getElementById('deleteFirebaseModal');
+            const bsModal = modalEl ? new bootstrap.Modal(modalEl) : null;
+
+            triggerBtn?.addEventListener('click', () => bsModal && bsModal.show());
+
+            confirmBtn?.addEventListener('click', () => {
+                confirmBtn.disabled = true;
+                confirmSpinner.classList.remove('d-none');
+                bsModal && bsModal.hide();
+                setTimeout(() => deleteForm.submit(), 300);
+            });
+
+            modalEl?.addEventListener('hidden.bs.modal', () => {
+                confirmBtn.disabled = false;
+                confirmSpinner.classList.add('d-none');
+            });
+        })();
+    </script>
+}

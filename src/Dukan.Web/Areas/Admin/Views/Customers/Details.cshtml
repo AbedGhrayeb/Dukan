@@ -1,0 +1,282 @@
+@using Dukan.Web.Application.Interfaces
+@using Dukan.Web.Domain.Entities
+@model CustomerDto
+@{
+    ViewData["Title"] = "تفاصيل العميل";
+    var activeSubscriptions = Model.Subscriptions.Where(s => s.Status == SubscriptionStatus.Active).OrderByDescending(s => s.RequestAt).ToList();
+    var pendingRequests = Model.Subscriptions.Where(r => r.Status == SubscriptionStatus.Pending).ToList();
+    var allSubs = Model.Subscriptions.OrderByDescending(s => s.RequestAt).ToList();
+    var firebaseConfigs = ViewData["FirebaseConfigs"] as Dictionary<Guid, FirebaseConfig>;
+    var firebaseConfigsDict = firebaseConfigs ?? new Dictionary<Guid, FirebaseConfig>();
+    // Legacy single
+    var firebaseDto = ViewData["FirebaseDto"] as FirebaseConfigDto;
+    var hasFirebaseLegacy = ViewData["HasFirebaseConfig"] as bool? ?? false;
+    var hasAnyFirebase = firebaseConfigsDict.Any();
+    var initials = string.IsNullOrWhiteSpace(Model.FullName) ? "?" : string.Join("", Model.FullName.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(s => s[0].ToString().ToUpperInvariant()));
+    var totalCount = Model.Subscriptions.Count();
+}
+
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb mb-0 small">
+        <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Dashboard" asp-action="Index" class="text-decoration-none">لوحة التحكم</a></li>
+        <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Customers" asp-action="Index" class="text-decoration-none">العملاء</a></li>
+        <li class="breadcrumb-item active" aria-current="page">@Model.FullName</li>
+    </ol>
+</nav>
+
+<div class="card border-0 shadow-sm overflow-hidden mb-4">
+    <div class="card-body p-4">
+        <div class="d-flex flex-column flex-lg-row gap-4 align-items-start">
+            <div class="d-flex gap-3 flex-grow-1 min-w-0">
+                <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary text-white fw-bold flex-shrink-0 shadow-sm" style="width:4.5rem;height:4.5rem;font-size:1.5rem;">@initials</span>
+                <div class="flex-grow-1 min-w-0">
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        <h1 class="h4 mb-0">@Model.FullName</h1>
+                        <span class="badge @(hasAnyFirebase ? "bg-success" : "bg-warning text-dark")">
+                            <i class="bi @(hasAnyFirebase ? "bi-check-circle" : "bi-exclamation-triangle") me-1"></i>@(hasAnyFirebase ? $"Firebase مُهيأ ({firebaseConfigsDict.Count})" : "Firebase غير مُهيأ")
+                        </span>
+                        @if (activeSubscriptions.Any())
+                        {
+                            <span class="badge bg-primary bg-opacity-10 text-primary border"><i class="bi bi-badge-check me-1"></i>نشط</span>
+                        }
+                        else if (pendingRequests.Any())
+                        {
+                            <span class="badge bg-warning bg-opacity-10 text-warning border"><i class="bi bi-hourglass-split me-1"></i>طلب معلق</span>
+                        }
+                    </div>
+                    <div class="d-flex align-items-center gap-2 mt-1 text-primary fw-semibold">
+                        <i class="bi bi-shop small"></i> @Model.StoreName
+                    </div>
+                    <div class="d-flex flex-wrap gap-2 mt-3">
+                        <a href="tel:@Model.Phone" class="btn btn-sm btn-outline-secondary" dir="ltr"><i class="bi bi-telephone me-1"></i>@Model.Phone</a>
+                        <a href="https://wa.me/@Model.WhatsAppNumber" target="_blank" rel="noopener" class="btn btn-sm btn-success" dir="ltr"><i class="bi bi-whatsapp me-1"></i>@Model.WhatsAppNumber</a>
+                        <span class="text-body-secondary small d-inline-flex align-items-center ms-1"><i class="bi bi-calendar-event me-1"></i>@Model.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd")</span>
+                    </div>
+                </div>
+            </div>
+            <div class="d-flex flex-lg-column gap-2 flex-shrink-0">
+                <a class="btn btn-outline-secondary btn-sm" asp-area="Admin" asp-controller="Customers" asp-action="Index"><i class="bi bi-arrow-right me-1"></i> رجوع</a>
+            </div>
+        </div>
+    </div>
+    <div class="bg-light border-top px-4 py-3">
+        <div class="row g-3 small">
+            <div class="col-6 col-lg-3">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="d-inline-flex align-items-center justify-content-center rounded-2 bg-success bg-opacity-10" style="width:2rem;height:2rem;"><i class="bi bi-check2-circle text-success"></i></span>
+                    <div><div class="text-body-secondary">نشط</div><div class="fw-bold fs-6">@activeSubscriptions.Count</div></div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="d-inline-flex align-items-center justify-content-center rounded-2 bg-warning bg-opacity-10" style="width:2rem;height:2rem;"><i class="bi bi-hourglass-split text-warning"></i></span>
+                    <div><div class="text-body-secondary">معلق</div><div class="fw-bold fs-6">@pendingRequests.Count</div></div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="d-inline-flex align-items-center justify-content-center rounded-2 bg-primary bg-opacity-10" style="width:2rem;height:2rem;"><i class="bi bi-collection text-primary"></i></span>
+                    <div><div class="text-body-secondary">الإجمالي</div><div class="fw-bold fs-6">@totalCount</div></div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="d-inline-flex align-items-center justify-content-center rounded-2 @(hasAnyFirebase ? "bg-success bg-opacity-10" : "bg-secondary bg-opacity-10")" style="width:2rem;height:2rem;"><i class="bi bi-gear @(hasAnyFirebase ? "text-success" : "text-secondary")"></i></span>
+                    <div><div class="text-body-secondary">Firebase configs</div><div class="fw-bold fs-6 @(hasAnyFirebase ? "text-success" : "text-warning")">@firebaseConfigsDict.Count / @totalCount</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-12 col-lg-4">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-bottom py-3 d-flex align-items-center gap-2">
+                <span class="d-inline-flex align-items-center justify-content-center rounded-2 bg-primary bg-opacity-10" style="width:2rem;height:2rem;"><i class="bi bi-person text-primary"></i></span>
+                <h2 class="h6 mb-0">معلومات العميل</h2>
+            </div>
+            <div class="card-body">
+                <div class="d-flex flex-column gap-3 small">
+                    <div class="d-flex justify-content-between"><span class="text-body-secondary">الاسم</span><span class="fw-semibold">@Model.FullName</span></div>
+                    <div class="d-flex justify-content-between"><span class="text-body-secondary">المتجر</span><span class="fw-semibold text-primary">@Model.StoreName</span></div>
+                    <div class="d-flex justify-content-between"><span class="text-body-secondary">الهاتف</span><a href="tel:@Model.Phone" class="fw-semibold text-decoration-none" dir="ltr">@Model.Phone</a></div>
+                    <div class="d-flex justify-content-between"><span class="text-body-secondary">الواتساب</span><a href="https://wa.me/@Model.WhatsAppNumber" target="_blank" rel="noopener" class="fw-semibold text-decoration-none" dir="ltr"><i class="bi bi-whatsapp text-success me-1"></i>@Model.WhatsAppNumber</a></div>
+                    <div class="d-flex justify-content-between"><span class="text-body-secondary">تاريخ التسجيل</span><span class="fw-semibold">@Model.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd")</span></div>
+                </div>
+                <hr class="my-3" />
+                <form method="post" asp-area="Admin" asp-controller="Customers" asp-action="EditNotes" asp-route-id="@Model.Id">
+                    <label for="notes" class="form-label small fw-semibold">ملاحظات داخلية</label>
+                    <textarea id="notes" name="notes" class="form-control mb-2" rows="4" placeholder="أضف ملاحظة للمتابعة…">@Model.Notes</textarea>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-body-secondary small"><i class="bi bi-lock me-1"></i>مرئية للمسؤول فقط</span>
+                        <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-save me-1"></i> حفظ</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-8">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                <h2 class="h6 mb-0 d-flex align-items-center gap-2"><i class="bi bi-check2-circle text-success"></i> الاشتراك النشط</h2>
+                <span class="badge bg-light text-dark border">@activeSubscriptions.Count</span>
+            </div>
+            <div class="card-body">
+                @if (activeSubscriptions.Count == 0)
+                {
+                    <div class="text-center py-4">
+                        <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-light mb-2" style="width:3rem;height:3rem;"><i class="bi bi-inbox text-body-tertiary fs-5"></i></div>
+                        <p class="text-body-secondary small mb-2">لا يوجد اشتراك نشط حالياً.</p>
+                        @if (pendingRequests.Any()) { <span class="badge bg-warning text-dark">يوجد طلب معلق بانتظار التفعيل</span> }
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead class="table-light"><tr><th>الخطة</th><th>يبدأ</th><th>ينتهي</th><th>Firebase</th><th>الحالة</th><th></th></tr></thead>
+                            <tbody>
+                                @foreach (var subscription in activeSubscriptions)
+                                {
+                                    var hasFb = firebaseConfigsDict.ContainsKey(subscription.Id);
+                                    <tr>
+                                        <td class="fw-semibold">@subscription.PlanName</td>
+                                        <td class="small">@subscription.StartDate</td>
+                                        <td class="small">@subscription.EndDate</td>
+                                        <td>@if (hasFb) { <span class="badge bg-success">مُهيأ</span> } else { <span class="badge bg-warning text-dark">غير مُهيأ</span> }</td>
+                                        <td><span class="badge @StatusDisplay.GetBadgeClass(subscription.Status)">@StatusDisplay.GetLabel(subscription.Status)</span></td>
+                                        <td>
+                                            <div class="d-flex gap-1">
+                                                <a class="btn btn-sm btn-outline-primary" asp-area="Admin" asp-controller="Subscriptions" asp-action="Details" asp-route-id="@subscription.Id">عرض</a>
+                                                <a class="btn btn-sm @(hasFb ? "btn-outline-secondary" : "btn-warning")" asp-area="Admin" asp-controller="FirebaseConfig" asp-action="Index" asp-route-subscriptionId="@subscription.Id" title="Firebase"><i class="bi bi-gear"></i></a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                <h2 class="h6 mb-0 d-flex align-items-center gap-2"><i class="bi bi-hourglass-split text-warning"></i> الطلبات المعلقة</h2>
+                <span class="badge @(pendingRequests.Any() ? "bg-warning text-dark" : "bg-light text-dark border")">@pendingRequests.Count</span>
+            </div>
+            <div class="card-body">
+                @if (pendingRequests.Count == 0)
+                {
+                    <div class="text-center py-3">
+                        <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-light mb-2" style="width:3rem;height:3rem;"><i class="bi bi-check2 text-body-tertiary fs-5"></i></div>
+                        <p class="text-body-secondary small mb-0">لا توجد طلبات معلقة.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="d-flex flex-column gap-2">
+                        @foreach (var request in pendingRequests)
+                        {
+                            var hasFb = firebaseConfigsDict.ContainsKey(request.Id);
+                            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 p-3 border rounded-3 bg-light bg-opacity-50">
+                                <div>
+                                    <div class="fw-semibold">@request.PlanName <span class="badge @(hasFb ? "bg-success" : "bg-warning text-dark") ms-2">@(hasFb ? "Firebase مُهيأ" : "Firebase غير مُهيأ")</span></div>
+                                    <div class="text-body-secondary small"><i class="bi bi-clock me-1"></i>@request.RequestAt • @request.DurationLable • @request.DisplayPrice</div>
+                                </div>
+                                <div class="d-flex gap-1">
+                                    @if (!hasFb)
+                                    {
+                                        <a class="btn btn-sm btn-warning" asp-area="Admin" asp-controller="FirebaseConfig" asp-action="Index" asp-route-subscriptionId="@request.Id"><i class="bi bi-gear me-1"></i> تهيئة</a>
+                                    }
+                                    <a class="btn btn-sm btn-primary" asp-area="Admin" asp-controller="Requests" asp-action="Details" asp-route-id="@request.Id">معالجة <i class="bi bi-arrow-left ms-1"></i></a>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                <h2 class="h6 mb-0 d-flex align-items-center gap-2"><i class="bi bi-clock-history text-primary"></i> سجل الاشتراكات — Firebase لكل اشتراك</h2>
+                <span class="badge bg-light text-dark border">@totalCount</span>
+            </div>
+            <div class="card-body">
+                @if (allSubs.Count == 0)
+                {
+                    <p class="text-body-secondary small mb-0 text-center py-3">لا يوجد سجل اشتراكات.</p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead class="table-light"><tr><th>الخطة</th><th>الحالة</th><th>Firebase</th><th>Project</th><th></th></tr></thead>
+                            <tbody>
+                                @foreach (var subscription in allSubs)
+                                {
+                                    var hasFb = firebaseConfigsDict.TryGetValue(subscription.Id, out var cfg);
+                                    <tr>
+                                        <td>@subscription.PlanName</td>
+                                        <td><span class="badge @StatusDisplay.GetBadgeClass(subscription.Status)">@StatusDisplay.GetLabel(subscription.Status)</span></td>
+                                        <td>@if (hasFb) { <span class="badge bg-success">مُهيأ</span> } else { <span class="badge bg-warning text-dark">غير مُهيأ</span> }</td>
+                                        <td class="small"><code>@(hasFb ? cfg!.ProjectId : "-")</code></td>
+                                        <td>
+                                            <div class="d-flex gap-1">
+                                                <a class="btn btn-sm btn-outline-primary" asp-area="Admin" asp-controller="Subscriptions" asp-action="Details" asp-route-id="@subscription.Id">عرض</a>
+                                                <a class="btn btn-sm @(hasFb ? "btn-outline-secondary" : "btn-warning")" asp-area="Admin" asp-controller="FirebaseConfig" asp-action="Index" asp-route-subscriptionId="@subscription.Id"><i class="bi bi-gear"></i></a>
+                                                <a class="btn btn-sm btn-outline-secondary" asp-area="Admin" asp-controller="RemoteConfig" asp-action="Index" asp-route-subscriptionId="@subscription.Id"><i class="bi bi-sliders"></i></a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="alert alert-info mt-3 mb-0 small">
+                        <i class="bi bi-info-circle me-1"></i> كل اشتراك يملك مشروع Firebase منفصل — <code>project_id</code> يجب أن يكون فريد. العميل يمكنه امتلاك عدة اشتراكات وكل اشتراك مُهيأ بشكل مستقل.
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Per-subscription Firebase quick config for pending -->
+@if (pendingRequests.Any())
+{
+    <div class="card border-0 shadow-sm mt-4">
+        <div class="card-header bg-white py-3">
+            <h3 class="h6 mb-0 d-flex align-items-center gap-2"><i class="bi bi-gear text-primary"></i> تهيئة Firebase للاشتراكات المعلقة</h3>
+            <small class="text-muted">اختر اشتراكاً معلقاً لتهيئة Firebase مباشرة — كل اشتراك يحتاج Service Account منفصل.</small>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                @foreach (var req in pendingRequests)
+                {
+                    var hasFb = firebaseConfigsDict.ContainsKey(req.Id);
+                    <div class="col-12 col-md-6">
+                        <div class="border rounded-3 p-3 h-100 @(hasFb ? "bg-success bg-opacity-10 border-success" : "bg-warning bg-opacity-10 border-warning")">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <div class="fw-semibold">@req.PlanName</div>
+                                    <div class="small text-body-secondary">@req.RequestAt</div>
+                                </div>
+                                <span class="badge @(hasFb ? "bg-success" : "bg-warning text-dark")">@(hasFb ? "مُهيأ" : "غير مُهيأ")</span>
+                            </div>
+                            <a asp-area="Admin" asp-controller="FirebaseConfig" asp-action="Index" asp-route-subscriptionId="@req.Id" class="btn btn-sm @(hasFb ? "btn-outline-success" : "btn-warning") w-100">
+                                <i class="bi bi-gear me-1"></i> @(hasFb ? "تعديل Firebase" : "تهيئة Firebase الآن")
+                            </a>
+                            <a asp-area="Admin" asp-controller="RemoteConfig" asp-action="Index" asp-route-subscriptionId="@req.Id" class="btn btn-sm btn-outline-secondary w-100 mt-2 @(hasFb ? "" : "disabled")">
+                                <i class="bi bi-sliders me-1"></i> إعدادات التطبيق
+                            </a>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}

@@ -1,0 +1,343 @@
+@using Dukan.Web.Application.DTOs.RemoteConfig
+@using Dukan.Web.Application.Interfaces
+@using Dukan.Web.Domain.Entities
+@model RemoteConfigTemplateDto
+@{
+    ViewData["Title"] = "إعدادات التطبيق (Firebase Remote Config)";
+    var configError = ViewData["ConfigError"] as string;
+    var hasDraft = Model.HasUnpublishedChanges;
+    var selectedSubscriptionId = ViewData["SelectedSubscriptionId"] as Guid? ?? ViewData["SelectedCustomerId"] as Guid?;
+    var selectedSubscription = ViewData["SelectedSubscription"] as Subscription;
+    var selectedCustomer = ViewData["SelectedCustomer"] as Customer;
+    var subscriptionList = ViewData["SubscriptionList"] as List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>;
+    var customerList = ViewData["CustomerList"] as List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>;
+    var displayList = subscriptionList ?? customerList;
+    var subscriptionConfigList = ViewData["SubscriptionConfigList"] as IReadOnlyList<FirebaseConfigListItemDto> ?? ViewData["CustomerConfigList"] as IReadOnlyList<FirebaseConfigListItemDto>;
+    var activationSub = ViewData["ActivationSubscription"] as SubscriptionDto;
+    var activationSubId = ViewData["ActivationSubscriptionId"] as Guid? ?? selectedSubscriptionId;
+    var activationError = ViewData["ActivationError"] as string;
+    var displayName = selectedSubscription != null ? $"{selectedSubscription.Customer.FullName} - {selectedSubscription.Customer.StoreName} - {selectedSubscription.Plan.Name}" : selectedCustomer?.FullName;
+}
+
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <label class="form-label fw-bold">اختر الاشتراك (كل اشتراك له Remote Config منفصل)</label>
+        <form method="get" asp-area="Admin" asp-controller="RemoteConfig" asp-action="Index" class="d-flex gap-2" id="rcCustomerForm">
+            @if (activationSubId.HasValue && activationSubId.Value != Guid.Empty && selectedSubscriptionId != activationSubId)
+            {
+                <input type="hidden" name="subscriptionId" value="@activationSubId" />
+            }
+            <select id="rcCustomerSelector" name="subscriptionId" class="form-select" style="max-width: 500px;" onchange="this.form.submit()">
+                <option value="">-- اختر الاشتراك --</option>
+                @if (displayList != null)
+                {
+                    foreach (var item in displayList)
+                    {
+                        if (selectedSubscriptionId?.ToString() == item.Value)
+                        {
+                            <option value="@item.Value" selected>@item.Text</option>
+                        }
+                        else
+                        {
+                            <option value="@item.Value">@item.Text</option>
+                        }
+                    }
+                }
+            </select>
+            <a href="@Url.Action("Index", "RemoteConfig", new { area = "Admin" })" class="btn btn-outline-secondary">عرض الكل</a>
+            <noscript><button type="submit" class="btn btn-primary">اختر</button></noscript>
+        </form>
+        @if (selectedSubscription != null)
+        {
+            <div class="alert alert-info mt-3 mb-0">
+                <i class="bi bi-receipt me-1"></i> الاشتراك المحدد: <strong>@selectedSubscription.Customer.FullName</strong> — @selectedSubscription.Customer.StoreName — <span class="badge bg-light text-dark border">@selectedSubscription.Plan.Name</span> — <span class="badge @StatusDisplay.GetBadgeClass(selectedSubscription.Status)">@selectedSubscription.Status</span>
+                <small class="text-muted ms-2">(@selectedSubscriptionId)</small>
+                <a asp-area="Admin" asp-controller="Subscriptions" asp-action="Details" asp-route-id="@selectedSubscription.Id" class="ms-2">عرض الاشتراك</a>
+                <a asp-area="Admin" asp-controller="Customers" asp-action="Details" asp-route-id="@selectedSubscription.CustomerId" class="ms-2">عرض العميل</a>
+                <a asp-area="Admin" asp-controller="FirebaseConfig" asp-action="Index" asp-route-subscriptionId="@selectedSubscription.Id" class="ms-2 btn btn-sm btn-outline-secondary">تهيئة Firebase</a>
+            </div>
+        }
+        else if (selectedCustomer != null)
+        {
+            <div class="alert alert-info mt-3 mb-0">
+                <i class="bi bi-person me-1"></i> العميل المحدد: <strong>@selectedCustomer.FullName</strong> — @selectedCustomer.Phone
+                <small class="text-muted ms-2">(@selectedCustomer.Id)</small>
+                <a asp-area="Admin" asp-controller="Customers" asp-action="Details" asp-route-id="@selectedCustomer.Id" class="ms-2">عرض العميل</a>
+                <a asp-area="Admin" asp-controller="FirebaseConfig" asp-action="Index" asp-route-subscriptionId="@selectedSubscriptionId" class="ms-2 btn btn-sm btn-outline-secondary">تهيئة Firebase</a>
+            </div>
+        }
+    </div>
+</div>
+
+@if (selectedSubscriptionId == null || selectedSubscriptionId == Guid.Empty)
+{
+    <div class="alert alert-warning">
+        <i class="bi bi-arrow-up me-1"></i> اختر اشتراكاً من القائمة أعلاه لإدارة Remote Config الخاص به. كل اشتراك له مشروع Firebase منفصل.
+    </div>
+    @if (subscriptionConfigList != null && subscriptionConfigList.Count > 0)
+    {
+        <div class="card border-0 shadow-sm">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>العميل</th>
+                            <th>المتجر</th>
+                            <th>الهاتف</th>
+                            <th>الخطة</th>
+                            <th>الحالة</th>
+                            <th>Firebase</th>
+                            <th>Project ID</th>
+                            <th>إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in subscriptionConfigList)
+                        {
+                            <tr>
+                                <td class="fw-semibold">@item.CustomerName</td>
+                                <td class="fw-semibold text-primary">@item.StoreName</td>
+                                <td dir="ltr">@item.Phone</td>
+                                <td><span class="badge bg-light text-dark border">@item.PlanName</span></td>
+                                <td><span class="badge bg-secondary">@item.Status</span></td>
+                                <td>
+                                    @if (item.HasConfig)
+                                    {
+                                        <span class="badge bg-success">مُهيأ</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning text-dark">غير مُهيأ</span>
+                                    }
+                                </td>
+                                <td><code>@(item.ProjectId ?? "-")</code></td>
+                                <td>
+                                    @if (item.HasConfig)
+                                    {
+                                        <a asp-area="Admin" asp-controller="RemoteConfig" asp-action="Index" asp-route-subscriptionId="@item.SubscriptionId" class="btn btn-sm btn-primary">
+                                            <i class="bi bi-sliders me-1"></i> إدارة
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <a asp-area="Admin" asp-controller="FirebaseConfig" asp-action="Index" asp-route-subscriptionId="@item.SubscriptionId" class="btn btn-sm btn-warning">
+                                            <i class="bi bi-gear me-1"></i> تهيئة
+                                        </a>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+}
+else
+{
+@if (activationSubId.HasValue && activationSubId.Value != Guid.Empty)
+{
+    @if (!string.IsNullOrEmpty(activationError))
+    {
+        <div class="alert alert-danger d-flex align-items-center gap-2">
+            <i class="bi bi-exclamation-octagon fs-4"></i>
+            <div>خطأ في تفعيل الاشتراك: @activationError</div>
+        </div>
+    }
+    else if (activationSub != null)
+    {
+        <div class="alert alert-primary border-2 d-flex flex-column gap-2">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-lightning-charge-fill fs-4 text-warning"></i>
+                <div>
+                    <strong>وضع تفعيل الاشتراك</strong>
+                    <div class="small">العميل: <strong>@activationSub.CustomerName (@activationSub.CustomerStoreName)</strong> — الخطة: <strong>@activationSub.PlanName</strong> — الحالة: <span class="badge @StatusDisplay.GetBadgeClass(activationSub.Status)">@activationSub.StatusDisplay</span></div>
+                </div>
+            </div>
+            <div class="small bg-white rounded p-2 border">
+                سيتم إضافة/تحديث القيم الافتراضية التالية عند النشر ثم تفعيل الاشتراك تلقائياً:
+                <ul class="mb-0 mt-1">
+                    <li><code>is_active</code> = <code>true</code> (boolean)</li>
+                    <li><code>subscription_start_date</code> = <code>@DateTime.UtcNow.ToString("yyyy-MM-dd")</code> (اليوم)</li>
+                    <li><code>subscription_end_date</code> = محسوب من خطة <strong>@activationSub.PlanName</strong> (@activationSub.DurationLable)</li>
+                </ul>
+                <div class="text-muted mt-1">اضغط <strong>نشر وتفعيل</strong> لحفظها في Firebase وتغيير حالة الاشتراك إلى نشط.</div>
+            </div>
+        </div>
+    }
+}
+<div class="d-flex flex-wrap gap-2 mb-3">
+    <button type="button" class="btn btn-primary" id="createRcBtn">
+        <i class="bi bi-plus-lg me-1"></i> إضافة مفتاح
+    </button>
+    @if (activationSubId.HasValue && activationSubId.Value != Guid.Empty && activationSub != null && string.IsNullOrEmpty(activationError))
+    {
+        <button type="button" class="btn btn-success" id="publishBtn">
+            <i class="bi bi-lightning-charge me-1"></i> نشر وتفعيل
+            <span class="badge bg-light text-success ms-1">is_active=true</span>
+        </button>
+    }
+    else
+    {
+        <button type="button" class="btn btn-success" id="publishBtn" disabled="@(!hasDraft)">
+            <i class="bi bi-cloud-upload me-1"></i> نشر
+            @if (hasDraft)
+            {
+                <span class="badge bg-light text-success ms-1">مسودة</span>
+            }
+        </button>
+    }
+    <button type="button" class="btn btn-outline-secondary" id="discardBtn" disabled="@(!hasDraft)">تجاهل المسودة</button>
+    <button type="button" class="btn btn-outline-secondary" id="refreshRcBtn"><i class="bi bi-arrow-clockwise"></i> تحديث</button>
+</div>
+
+@if (!string.IsNullOrEmpty(configError))
+{
+    <div class="alert alert-warning">
+        <div class="d-flex gap-2">
+            <i class="bi bi-exclamation-triangle fs-4"></i>
+            <div>
+                <strong>Firebase غير مُهيأ</strong>
+                <div class="small mt-1">@configError</div>
+                <div class="mt-2">
+                    <a asp-area="Admin" asp-controller="FirebaseConfig" asp-action="Index" asp-route-subscriptionId="@selectedSubscriptionId" class="btn btn-sm btn-warning">
+                        <i class="bi bi-gear me-1"></i> تهيئة Firebase للاشتراك
+                    </a>
+                </div>
+                <div class="small text-muted mt-2">
+                    الطريقة المفضلة الآن: الصق محتوى ملف Service Account JSON في صفحة <strong>تهيئة Firebase</strong> وسيُحفظ في قاعدة البيانات.<br />
+                    البديل (متقدم): <code>dotnet user-secrets</code> أو متغير بيئة <code>Firebase__CredentialJson</code>.
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (hasDraft)
+{
+    <div class="alert alert-warning d-flex align-items-center gap-2" id="draftAlert">
+        <i class="bi bi-pencil-square"></i>
+        <span>لديك تغييرات في المسودة لم يتم نشرها بعد. اضغط <strong>نشر</strong> لتطبيقها على جميع أجهزة التطبيق (1-5 دقائق انتشار).</span>
+    </div>
+}
+
+<div class="alert d-none" id="rcAlert" role="alert"></div>
+
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <div class="text-muted small">
+        @if (Model.ETag != null)
+        {
+            <span>ETag: <code>@Model.ETag</code></span>
+            <span class="mx-2">|</span>
+        }
+        <span>عدد المفاتيح: <strong>@Model.Parameters.Count</strong></span>
+        @if (Model.VersionNumber != 0)
+        {
+            <span class="mx-2">|</span>
+            <span>إصدار: @Model.VersionNumber</span>
+        }
+    </div>
+</div>
+
+<div id="rcTableContainer" data-table-url="@Url.Action("Table", "RemoteConfig", new { area = "Admin", subscriptionId = selectedSubscriptionId })">
+    <partial name="_RemoteConfigTable" model="Model" />
+</div>
+
+<!-- Create/Edit Modal -->
+<div class="modal fade" id="rcModal" tabindex="-1" aria-labelledby="rcModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="rcModalLabel">مفتاح Remote Config</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+            </div>
+            <form id="rcForm" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <partial name="_RemoteConfigFormFields" model="new RemoteConfigUpsertForm()" />
+                </div>
+                <div class="modal-footer bg-body-tertiary">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary" id="rcSubmitBtn">
+                        <span class="spinner-border spinner-border-sm me-1 d-none" id="rcSubmitSpinner" aria-hidden="true"></span>
+                        <span id="rcSubmitText">حفظ في المسودة</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteRcModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">حذف المفتاح</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0">هل أنت متأكد من حذف المفتاح <code id="deleteRcKey"></code>؟ سيتم الحذف بعد النشر فقط.</p>
+            </div>
+            <div class="modal-footer bg-body-tertiary">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteRcBtn">
+                    <span class="spinner-border spinner-border-sm me-1 d-none" id="deleteRcSpinner"></span> حذف من المسودة
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Publish Confirm Modal — Enhanced -->
+<div class="modal fade" id="publishConfirmModal" tabindex="-1" aria-labelledby="publishConfirmLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 overflow-hidden">
+            <div class="modal-header border-0 pb-0">
+                <div class="d-flex gap-3 align-items-start w-100">
+                    <span id="publishConfirmIcon" class="d-inline-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style="width:3rem;height:3rem;">
+                        <i class="bi fs-4" aria-hidden="true"></i>
+                    </span>
+                    <div class="flex-grow-1">
+                        <h5 class="modal-title mb-1" id="publishConfirmLabel">تأكيد النشر</h5>
+                        <p class="text-body-secondary small mb-0" id="publishConfirmSubtitle"></p>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+                </div>
+            </div>
+            <div class="modal-body pt-3">
+                <div id="publishConfirmBody" class="small"></div>
+                <div class="alert alert-light border d-flex gap-2 mt-3 mb-0 py-2 small">
+                    <i class="bi bi-clock text-primary flex-shrink-0" aria-hidden="true"></i>
+                    <span>سيظهر التغيير على أجهزة التطبيق خلال <strong>1-5 دقائق</strong> (انتشار Firebase).</span>
+                </div>
+            </div>
+            <div class="modal-footer bg-body-tertiary border-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn" id="confirmPublishBtn">
+                    <span class="spinner-border spinner-border-sm me-1 d-none" id="publishConfirmSpinner" aria-hidden="true"></span>
+                    <span id="confirmPublishText"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+}
+@section Scripts {
+    <script>
+        console.log('[remote-config] selectedSubscriptionId:', '@selectedSubscriptionId', 'hasDraft:', '@hasDraft');
+    </script>
+    <script>
+        window.rcUrls = {
+            get: '@Url.Action("Get", "RemoteConfig", new { area = "Admin", subscriptionId = selectedSubscriptionId })',
+            upsert: '@Url.Action("Upsert", "RemoteConfig", new { area = "Admin", subscriptionId = selectedSubscriptionId })',
+            delete: '@Url.Action("Delete", "RemoteConfig", new { area = "Admin", subscriptionId = selectedSubscriptionId })',
+            publish: '@Url.Action("Publish", "RemoteConfig", new { area = "Admin", subscriptionId = selectedSubscriptionId })',
+            discard: '@Url.Action("Discard", "RemoteConfig", new { area = "Admin", subscriptionId = selectedSubscriptionId })'
+        };
+        window.rcCustomerId = '@selectedSubscriptionId';
+        window.rcSubscriptionId = '@selectedSubscriptionId';
+        window.rcActivationSubId = '@activationSubId';
+    </script>
+    <script src="~/js/remote-config.js" asp-append-version="true"></script>
+}

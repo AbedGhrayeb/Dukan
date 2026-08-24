@@ -1,0 +1,30 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+artifacts/
+TestResults/
+
+# Rider
+.idea/
+
+# VS Code
+.vscode/
+
+# Secrets (never commit)
+appsettings.Local.json
+appsettings.*.local.json
+appsettings.json
+# Logs
+*.log
+logs/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Database
+*.mdf
+*.ldf

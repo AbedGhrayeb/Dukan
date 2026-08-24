@@ -1,0 +1,5 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Dukan.Web/Dukan.Web.csproj" />
+  </Folder>
+</Solution>

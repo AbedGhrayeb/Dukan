@@ -1,0 +1,159 @@
+@model Dukan.Web.Application.Interfaces.DashboardData
+@{
+    ViewData["Title"] = "لوحة التحكم";
+}
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-label">إجمالي العملاء</div>
+            <div class="stat-value">@Model.TotalCustomers</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-label">الاشتراكات النشطة</div>
+            <div class="stat-value">@Model.ActiveSubscriptions</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-label">طلبات جديدة</div>
+            <div class="stat-value">@Model.PendingRequests</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-label">الاشتراكات المنتهية</div>
+            <div class="stat-value">@Model.ExpiredSubscriptions</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-12 col-lg-6">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body">
+                <h2 class="h5 mb-3">أحدث طلبات الاشتراك</h2>
+                @if (Model.PendingRequests == 0)
+                {
+                    <p class="text-body-secondary mb-0">لا توجد طلبات بعد.</p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>العميل</th>
+                                    <th>المتجر</th>
+                                    <th>الخطة</th>
+                                    <th>الحالة</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var request in Model.RecentlyRequestedSubscriptions)
+                                {
+                                    <tr>
+                                        <td>@request.CustomerName</td>
+                                        <td class="fw-semibold text-primary">@request.CustomerStoreName</td>
+                                        <td>@request.PlanName</td>
+                                        <td><span class="badge @StatusDisplay.GetBadgeClass(request.Status)">@StatusDisplay.GetLabel(request.Status)</span></td>
+                                        <td>
+                                            <a class="btn btn-sm btn-outline-primary" asp-area="Admin" asp-controller="Requests" asp-action="Details" asp-route-id="@request.Id">عرض</a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-6">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body">
+                <h2 class="h5 mb-3">اشتراكات مفعّلة حديثاً</h2>
+                @if (Model.RecentlyActivatedSubscriptions.Count == 0)
+                {
+                    <p class="text-body-secondary mb-0">لا توجد اشتراكات مفعّلة بعد.</p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>العميل</th>
+                                    <th>المتجر</th>
+                                    <th>الخطة</th>
+                                    <th>ينتهي في</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var subscription in Model.RecentlyActivatedSubscriptions)
+                                {
+                                    <tr>
+                                        <td>@subscription!.CustomerName</td>
+                                        <td class="fw-semibold text-primary">@subscription!.CustomerStoreName</td>
+                                        <td>@subscription!.PlanName</td>
+                                        <td>@subscription.EndDate</td>
+                                        <td>
+                                            <a class="btn btn-sm btn-outline-primary" asp-area="Admin" asp-controller="Subscriptions" asp-action="Details" asp-route-id="@subscription!.Id">عرض</a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <h2 class="h5 mb-3">اشتراكات تنتهي خلال 7 أيام</h2>
+                @if (Model.ExpiringSoon.Count == 0)
+                {
+                    <p class="text-body-secondary mb-0">لا توجد اشتراكات قريبة من الانتهاء.</p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>العميل</th>
+                                    <th>المتجر</th>
+                                    <th>الخطة</th>
+                                    <th>تاريخ الانتهاء</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var subscription in Model.ExpiringSoon)
+                                {
+                                    <tr>
+                                        <td>@subscription.CustomerName</td>
+                                        <td class="fw-semibold text-primary">@subscription.CustomerStoreName</td>
+                                        <td>@subscription.PlanName</td>
+                                        <td>@subscription.EndDate</td>
+                                        <td>
+                                            <a class="btn btn-sm btn-outline-primary" asp-area="Admin" asp-controller="Subscriptions" asp-action="Details" asp-route-id="@subscription.Id">عرض</a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

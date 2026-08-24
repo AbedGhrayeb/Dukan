@@ -1,0 +1,106 @@
+@model PlanForm
+
+<div class="plan-form-section">
+    <h6 class="plan-form-section-title">
+        <i class="bi bi-info-circle me-1" aria-hidden="true"></i> المعلومات الأساسية
+    </h6>
+
+    <div class="mb-3">
+        <label asp-for="Name" class="form-label">اسم الخطة <span class="text-danger">*</span></label>
+        <div class="input-group">
+            <span class="input-group-text" aria-hidden="true"><i class="bi bi-tag"></i></span>
+            <input asp-for="Name" class="form-control" placeholder="مثال: شهر واحد" />
+        </div>
+        <span asp-validation-for="Name" class="field-validation-error"></span>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label asp-for="Duration" class="form-label">المدة <span class="text-danger">*</span></label>
+            <div class="input-group">
+                <span class="input-group-text" aria-hidden="true"><i class="bi bi-clock"></i></span>
+                <input asp-for="Duration" class="form-control" type="number" min="1" placeholder="1" />
+            </div>
+            <span asp-validation-for="Duration" class="field-validation-error"></span>
+        </div>
+        <div class="col-md-6">
+            <label asp-for="DurationUnit" class="form-label">وحدة المدة <span class="text-danger">*</span></label>
+            <div class="input-group">
+                <span class="input-group-text" aria-hidden="true"><i class="bi bi-calendar3"></i></span>
+                <select asp-for="DurationUnit" class="form-select">
+                    <option value="">اختر…</option>
+                    <option value="Day">يوم</option>
+                    <option value="Week">أسبوع</option>
+                    <option value="Month">شهر</option>
+                    <option value="Year">سنة</option>
+                </select>
+            </div>
+            <span asp-validation-for="DurationUnit" class="field-validation-error"></span>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label asp-for="Price" class="form-label">السعر</label>
+            <div class="input-group">
+                <span class="input-group-text" aria-hidden="true"><i class="bi bi-cash-coin"></i></span>
+                <input asp-for="Price" class="form-control" type="number" step="0.01" min="0" placeholder="0" />
+            </div>
+            <span asp-validation-for="Price" class="field-validation-error"></span>
+        </div>
+        <div class="col-md-6">
+            <label asp-for="Currency" class="form-label">العملة <span class="text-danger">*</span></label>
+            <div class="input-group">
+                <span class="input-group-text" aria-hidden="true"><i class="bi bi-currency-exchange"></i></span>
+                <input asp-for="Currency" class="form-control" placeholder="ILS" value="ILS" readonly />
+            </div>
+            <span asp-validation-for="Currency" class="field-validation-error"></span>
+        </div>
+    </div>
+
+    <div class="mb-0">
+        <label asp-for="DisplayOrder" class="form-label">ترتيب العرض</label>
+        <div class="input-group">
+            <span class="input-group-text" aria-hidden="true"><i class="bi bi-sort-numeric-down"></i></span>
+            <input asp-for="DisplayOrder" class="form-control" type="number" min="1" max="10" placeholder="0" />
+        </div>
+        <span asp-validation-for="DisplayOrder" class="field-validation-error"></span>
+    </div>
+</div>
+
+<div class="plan-form-section">
+    <h6 class="plan-form-section-title">
+        <i class="bi bi-toggles me-1" aria-hidden="true"></i> الإعدادات
+    </h6>
+
+    <div class="row g-3">
+        <div class="col-md-6">
+            <div class="form-switch-card h-100">
+                <div class="form-check form-switch mb-1">
+                    <input asp-for="IsTrial" class="form-check-input" />
+                    <label asp-for="IsTrial" class="form-check-label fw-semibold">خطة تجريبية مجانية</label>
+                </div>
+                <p class="mb-0">يتيح للعميل تجربة الخطة مجاناً قبل الاشتراك المدفوع.</p>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-switch-card h-100">
+                <div class="form-check form-switch mb-1">
+                    <input asp-for="IsActive" class="form-check-input" />
+                    <label asp-for="IsActive" class="form-check-label fw-semibold">خطة نشطة</label>
+                </div>
+                <p class="mb-0">الخطط النشطة فقط تظهر للعملاء عند طلب الاشتراك.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="plan-form-section mb-0">
+    <h6 class="plan-form-section-title">
+        <i class="bi bi-card-text me-1" aria-hidden="true"></i> الوصف
+    </h6>
+    <div class="mb-0">
+        <textarea asp-for="Description" class="form-control" rows="3" placeholder="اكتب وصفاً مختصراً لفوائد الخطة…"></textarea>
+        <span asp-validation-for="Description" class="field-validation-error"></span>
+    </div>
+</div>

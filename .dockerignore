@@ -1,0 +1,39 @@
+# Git
+**/.git
+**/.gitignore
+**/.vs
+**/.vscode
+**/.idea
+
+# Build outputs
+**/bin
+**/obj
+**/out
+**/publish
+**/TestResults
+**/artifacts
+
+# Docker
+**/Dockerfile*
+**/docker-compose*
+**/.dockerignore
+
+# Node (if any)
+**/node_modules
+**/npm-debug.log
+
+# Tests (not needed in runtime image)
+**/tests
+**/*.Tests
+**/TestResults
+
+# Local secrets & OS
+**/appsettings.Local.json
+**/appsettings.*.local.json
+**/.env
+**/*.log
+**/logs
+Thumbs.db
+.DS_Store
+*.mdf
+*.ldf

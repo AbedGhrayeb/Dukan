@@ -1,0 +1,61 @@
+@model IReadOnlyList<PlanDto>
+
+@if (Model.Count == 0)
+{
+    <div class="alert alert-info">لا توجد خطط بعد. أنشئ خطتك الأولى.</div>
+}
+else
+{
+    <div class="card shadow-sm border-0">
+        <div class="table-responsive plans-table-scroll">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>الخطة</th>
+                        <th>المدة</th>
+                        <th>السعر</th>
+                        <th>تجريبية</th>
+                        <th>الحالة</th>
+                        <th>الترتيب</th>
+                        <th>إجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var plan in Model)
+                    {
+                        <tr data-plan-id="@plan.Id">
+                            <td class="fw-semibold">@plan.Name</td>
+                            <td>@DurationDisplay.Format(plan.Duration, plan.DurationUnit)</td>
+                            <td>@(plan.Price == 0 ? "مجاني" : $"{plan.Price.ToString("0.##")} {plan.Currency}")</td>
+                            <td>@(plan.IsTrial ? "نعم" : "لا")</td>
+                            <td>
+                                <span class="badge @(plan.IsActive ? "badge-active" : "badge-expired")">@(plan.IsActive ? "نشطة" : "موقفة")</span>
+                            </td>
+                            <td>@plan.DisplayOrder</td>
+                            <td>
+                                <div class="d-flex gap-1 flex-wrap">
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-primary js-plan-edit"
+                                            data-url="@Url.Action("Get", "Plans", new { area = "Admin", id = plan.Id })">
+                                        تعديل
+                                    </button>
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-secondary js-plan-toggle"
+                                            data-url="@Url.Action("SetActive", "Plans", new { area = "Admin", id = plan.Id, isActive = !plan.IsActive })">
+                                        @(plan.IsActive ? "إيقاف" : "تفعيل")
+                                    </button>
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-danger js-plan-delete"
+                                            data-url="@Url.Action("Delete", "Plans", new { area = "Admin", id = plan.Id })"
+                                            data-name="@plan.Name">
+                                        حذف
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

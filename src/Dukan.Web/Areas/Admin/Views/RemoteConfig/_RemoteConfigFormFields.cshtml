@@ -1,0 +1,35 @@
+@using Dukan.Web.Application.DTOs.RemoteConfig
+@model RemoteConfigUpsertForm
+
+<div asp-validation-summary="ModelOnly" class="alert alert-danger d-none" id="rcFormSummary"></div>
+
+<div class="mb-3">
+    <label asp-for="Key" class="form-label">المفتاح <span class="text-danger">*</span></label>
+    <input asp-for="Key" class="form-control" id="rcKey" dir="ltr" placeholder="مثال: app_enabled" />
+    <span asp-validation-for="Key" class="text-danger small"></span>
+    <div class="form-text">يبدأ بحرف، أحرف/أرقام/_ فقط. لا يمكن تعديله بعد الإنشاء إلا بإعادة الإنشاء.</div>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-4">
+        <label asp-for="ValueType" class="form-label">النوع</label>
+        <select asp-for="ValueType" class="form-select" id="rcValueType">
+            <option value="string">string</option>
+            <option value="boolean">boolean</option>
+            <option value="number">number</option>
+            <option value="json">json</option>
+        </select>
+    </div>
+    <div class="col-md-8">
+        <label asp-for="Description" class="form-label">الوصف</label>
+        <input asp-for="Description" class="form-control" id="rcDescription" placeholder="وصف اختياري يظهر في لوحة Firebase" />
+        <span asp-validation-for="Description" class="text-danger small"></span>
+    </div>
+</div>
+
+<div class="mt-3">
+    <label asp-for="Value" class="form-label">القيمة <span class="text-danger">*</span></label>
+    <textarea asp-for="Value" class="form-control font-monospace" id="rcValue" rows="4" dir="ltr" placeholder='مثال: true أو "مرحباً" أو 42 أو {"a":1}'></textarea>
+    <span asp-validation-for="Value" class="text-danger small"></span>
+    <div class="form-text" id="rcValueHelp">للنوع boolean اكتب true/false. للنوع json اكتب JSON صالح.</div>
+</div>

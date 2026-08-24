@@ -1,0 +1,21 @@
+@{
+    ViewData["Title"] = "تم إرسال الطلب";
+    var whatsAppNumber = ViewData["WhatsAppNumber"]?.ToString() ?? "";
+    var message = Uri.EscapeDataString("مرحباً، أرسلت طلب اشتراك في دكان وأرغب في متابعة الطلب.");
+}
+
+<section class="section bg-green-50">
+    <div class="container text-center" style="max-width: 36rem;">
+        <span class="success-icon"><i class="bi bi-check-lg" aria-hidden="true"></i></span>
+        <h1 class="section-title mt-3">تم إرسال طلب الاشتراك بنجاح.</h1>
+        <p class="section-sub mx-auto">
+            تواصل معنا عبر واتساب لإكمال الإجراءات.
+        </p>
+        <div class="d-flex flex-wrap justify-content-center gap-3 mt-4">
+            <a class="btn btn-whatsapp btn-lg" href="https://wa.me/@whatsAppNumber?text=@message" target="_blank" rel="noopener">
+                <i class="bi bi-whatsapp me-1" aria-hidden="true"></i> تواصل معنا عبر واتساب
+            </a>
+            <a class="btn btn-outline-primary btn-lg" asp-controller="Home" asp-action="Index">العودة للرئيسية</a>
+        </div>
+    </div>
+</section>

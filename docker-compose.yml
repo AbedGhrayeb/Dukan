@@ -1,0 +1,65 @@
+services:
+  dukan-web:
+    build:
+      context: .
+      dockerfile: src/Dukan.Web/Dockerfile
+    image: dukan-web:latest
+    container_name: dukan-web
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-5000}:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - DISABLE_HTTPS_REDIRECT=true
+      # Database — override appsettings.json via env (double underscore)
+      - ConnectionStrings__DefaultConnection=Server=dukan-db,1433;Database=DukanDb;User Id=sa;Password=${SA_PASSWORD:-YourStrong!Passw0rd};MultipleActiveResultSets=true;TrustServerCertificate=True;Encrypt=True
+      # Seed admin — set via .env or keep default (change in production!)
+      - SeedData__Admin__UserName=${ADMIN_USERNAME:-admin}
+      - SeedData__Admin__Email=${ADMIN_EMAIL:-admin@dukan.local}
+      - SeedData__Admin__Password=${ADMIN_PASSWORD:-Admin@123456}
+      # Firebase — optional, can be set per-subscription via DB, but global fallback via env
+      - Firebase__Enabled=${FIREBASE_ENABLED:-true}
+      # Contact
+      - ContactSettings__PhoneNumber=${CONTACT_PHONE:-+972597417181}
+      - ContactSettings__WhatsAppNumber=${CONTACT_WHATSAPP:-+972597417181}
+    depends_on:
+      dukan-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 20s
+    networks:
+      - dukan-net
+
+  dukan-db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: dukan-db
+    restart: unless-stopped
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=${SA_PASSWORD:-YourStrong!Passw0rd}
+      - MSSQL_PID=Developer
+    ports:
+      - "${DB_PORT:-1433}:1433"
+    volumes:
+      - dukan-mssql-data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD", "/opt/mssql-tools18/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "${SA_PASSWORD:-YourStrong!Passw0rd}", "-Q", "SELECT 1", "-C"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 30s
+    networks:
+      - dukan-net
+
+volumes:
+  dukan-mssql-data:
+    driver: local
+
+networks:
+  dukan-net:
+    driver: bridge

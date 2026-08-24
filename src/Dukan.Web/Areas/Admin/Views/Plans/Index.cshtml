@@ -1,0 +1,88 @@
+@model IReadOnlyList<PlanDto>
+@{
+    ViewData["Title"] = "الخطط";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <p class="text-body-secondary mb-0">إدارة خطط الاشتراك والأسعار.</p>
+    <button type="button" class="btn btn-primary" id="createPlanBtn">
+        <i class="bi bi-plus-lg me-1" aria-hidden="true"></i> خطة جديدة
+    </button>
+</div>
+
+<div id="plansAlert" class="alert d-none" role="alert"></div>
+
+<div id="plansTableContainer"
+     data-table-url="@Url.Action("Table", "Plans", new { area = "Admin" })">
+    <partial name="_PlanTable" model="Model" />
+</div>
+
+<!-- إنشاء / تعديل خطة -->
+<div class="modal fade" id="planModal" tabindex="-1" aria-labelledby="planModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content border-0 overflow-hidden">
+            <form id="planForm"
+                  data-create-url="@Url.Action("Create", "Plans", new { area = "Admin" })"
+                  data-edit-url-prefix="@Url.Action("Edit", "Plans", new { area = "Admin", id = "__ID__" })">
+                @Html.AntiForgeryToken()
+                <div class="modal-header plan-modal-header">
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="plan-modal-header-icon" aria-hidden="true"><i class="bi bi-tags"></i></span>
+                        <div>
+                            <h5 class="modal-title mb-0" id="planModalTitle">خطة جديدة</h5>
+                            <p class="plan-modal-subtitle mb-0" id="planModalSubtitle">أضف خطة اشتراك جديدة لعرضها على العملاء.</p>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="planFormError" class="alert alert-danger d-none"></div>
+                    <input type="hidden" id="Id" name="Id" />
+                    <partial name="_PlanFormFields" model="new PlanForm()" />
+                </div>
+                <div class="modal-footer bg-body-tertiary">
+                    <small class="text-body-secondary d-none d-md-inline me-auto">
+                        <kbd>Ctrl</kbd> + <kbd>Enter</kbd> للحفظ
+                    </small>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary" id="planFormSubmit">
+                        <span class="spinner-border spinner-border-sm me-1 d-none" id="planFormSpinner" aria-hidden="true"></span>
+                        <span id="planFormSubmitText">حفظ الخطة</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- تأكيد حذف خطة -->
+<div class="modal fade" id="deletePlanModal" tabindex="-1" aria-labelledby="deletePlanModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 overflow-hidden">
+            <div class="modal-header plan-modal-header-danger">
+                <div class="d-flex align-items-center gap-3">
+                    <span class="plan-modal-header-icon" aria-hidden="true"><i class="bi bi-trash3"></i></span>
+                    <div>
+                        <h5 class="modal-title mb-0" id="deletePlanModalTitle">حذف الخطة</h5>
+                        <p class="plan-modal-subtitle mb-0">لا يمكن التراجع عن هذا الإجراء.</p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0">هل أنت متأكد من حذف الخطة «<span class="fw-bold" id="deletePlanName"></span>»؟</p>
+            </div>
+            <div class="modal-footer bg-body-tertiary">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                    <span class="spinner-border spinner-border-sm me-1 d-none" id="confirmDeleteSpinner" aria-hidden="true"></span>
+                    حذف
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/plans.js" asp-append-version="true"></script>
+}

@@ -1,0 +1,432 @@
+@model Dukan.Web.Application.DTOs.SubscriptionRequestForm
+@{
+    ViewData["Title"] = "نظام إدارة البقالة والمتجر الصغير";
+    var plans = ViewData["Plans"] as IReadOnlyList<Dukan.Web.Application.DTOs.PlanDto> ?? [];
+}
+
+<!-- Hero -->
+<section class="hero" aria-labelledby="hero-title">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-12 col-lg-7">
+                <span class="hero-eyebrow">
+                    <i class="bi bi-wifi-off" aria-hidden="true"></i>
+                    يعمل بدون إنترنت
+                </span>
+                <h1 id="hero-title">محلّك في جيبك — والإنترنت مش شرط.</h1>
+                <p class="lead">
+                    دكان يساعدك على إدارة البيع والمخزون وديون الزبائن والجرد وتقارير الربح،
+                    حتى عندما ينقطع الإنترنت.
+                </p>
+                <div class="hero-ctas">
+                    <a class="btn btn-primary btn-lg" href="#subscribe">
+                        <i class="bi bi-send me-1" aria-hidden="true"></i> اطلب اشتراكك الآن
+                    </a>
+                    <a class="btn btn-outline-primary btn-lg" href="#benefits">
+                        <i class="bi bi-stars me-1" aria-hidden="true"></i> تعرّف على المزايا
+                    </a>
+                    <a class="btn btn-whatsapp btn-lg" href="https://wa.me/@ViewData["WhatsAppNumber"]" target="_blank" rel="noopener">
+                        <i class="bi bi-whatsapp me-1" aria-hidden="true"></i> تواصل معنا عبر واتساب
+                    </a>
+                </div>
+            </div>
+            <div class="col-12 col-lg-5">
+                <div class="phone" role="img" aria-label="نموذج شاشة تطبيق دكان أثناء البيع">
+                    <div class="phone-notch" aria-hidden="true"></div>
+                    <div class="phone-screen">
+                        <div class="phone-status">
+                            <span><i class="bi bi-person-fill" aria-hidden="true"></i> زبون: أحمد</span>
+                            <span class="phone-offline"><i class="bi bi-wifi-off" aria-hidden="true"></i> بدون نت</span>
+                        </div>
+                        <div class="phone-items">
+                            <div class="phone-item"><span>حليب</span><span class="price">7.50</span></div>
+                            <div class="phone-item"><span>خبز</span><span class="price">3.00</span></div>
+                            <div class="phone-item"><span>طماطم (كيلو)</span><span class="price">9.00</span></div>
+                            <div class="phone-total"><span>الإجمالي</span><span>19.50</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Core benefits -->
+<section class="section" id="benefits" aria-labelledby="benefits-title">
+    <div class="container">
+        <p class="section-kicker">لماذا دكان؟</p>
+        <h2 class="section-title" id="benefits-title">مزايا أساسية صُنعت لأصحاب البقالات والمتاجر الصغيرة</h2>
+        <p class="section-sub mb-4">أقوى ما يميز دكان عن البرامج العامة، كلها مبنية على طريقة العمل الحقيقية داخل المحل.</p>
+        <div class="row g-4 mt-2">
+            <div class="col-12 col-md-6 col-lg-4">
+                <article class="benefit-card">
+                    <span class="benefit-icon"><i class="bi bi-wifi-off" aria-hidden="true"></i></span>
+                    <h3>يعمل بدون إنترنت</h3>
+                    <p>البيع والجرد والتقارير تستمر حتى عند انقطاع الإنترنت، وتتم المزامنة عند عودة الاتصال.</p>
+                </article>
+            </div>
+            <div class="col-12 col-md-6 col-lg-4">
+                <article class="benefit-card">
+                    <span class="benefit-icon"><i class="bi bi-phone" aria-hidden="true"></i></span>
+                    <h3>أجهزتك تعمل معاً</h3>
+                    <p>يمكن لأجهزة المحل العمل معاً ومزامنة البيانات.</p>
+                </article>
+            </div>
+            <div class="col-12 col-md-6 col-lg-4">
+                <article class="benefit-card">
+                    <span class="benefit-icon"><i class="bi bi-person-check" aria-hidden="true"></i></span>
+                    <h3>حساب الزبون واضح</h3>
+                    <p>الزبون يستطيع الاطلاع على مشترياته ودفعاته والدين المتبقي دون الوصول إلى التكلفة أو هامش الربح.</p>
+                </article>
+            </div>
+            <div class="col-12 col-md-6 col-lg-4">
+                <article class="benefit-card">
+                    <span class="benefit-icon"><i class="bi bi-upc-scan" aria-hidden="true"></i></span>
+                    <h3>يفهم طريقة عمل البقالة</h3>
+                    <p>حبة، كرتونة، صندوق، كيلو، وبيع بالوزن.</p>
+                </article>
+            </div>
+            <div class="col-12 col-md-6 col-lg-4">
+                <article class="benefit-card">
+                    <span class="benefit-icon"><i class="bi bi-clipboard-check" aria-hidden="true"></i></span>
+                    <h3>جرد بدون إغلاق المحل</h3>
+                    <p>يمكن إنشاء جلسات جرد مستقلة للمناطق أو الرفوف ومراجعة الفروقات قبل الاعتماد.</p>
+                </article>
+            </div>
+            <div class="col-12 col-md-6 col-lg-4">
+                <article class="benefit-card">
+                    <span class="benefit-icon"><i class="bi bi-graph-up-arrow" aria-hidden="true"></i></span>
+                    <h3>تعرف ربحك</h3>
+                    <p>تقارير المبيعات، تكلفة البضاعة، الربح الإجمالي، المصاريف، وصافي الربح.</p>
+                </article>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features -->
+<section class="section section-alt" id="features" aria-labelledby="features-title">
+    <div class="container">
+        <p class="section-kicker">الخصائص</p>
+        <h2 class="section-title" id="features-title">كل ما تحتاجه لإدارة المحل يومياً</h2>
+        <p class="section-sub mb-4">ثمانية خصائص أساسية تغطي البيع والمخزون والزبائن والتقارير، كلها في بطاقات مرتبة.</p>
+
+        <div class="row g-4">
+            <div class="col-12 col-md-6 col-lg-4 col-xl-3">
+                <article class="feature-card">
+                    <span class="feature-icon"><i class="bi bi-cash-coin" aria-hidden="true"></i></span>
+                    <h3>البيع اليومي</h3>
+                    <ul class="feature-list">
+                        <li><i class="bi bi-check2" aria-hidden="true"></i> مسح الباركود بكاميرا الجوال</li>
+                        <li><i class="bi bi-check2" aria-hidden="true"></i> تشغيل الفلاش تلقائياً ليلاً</li>
+                        <li><i class="bi bi-check2" aria-hidden="true"></i> عدة باركودات للصنف</li>
+                        <li><i class="bi bi-check2" aria-hidden="true"></i> نقدي / بنكي / دين</li>
+                        <li><i class="bi bi-check2" aria-hidden="true"></i> حسم على مستوى الصنف</li>
+                        <li><i class="bi bi-check2" aria-hidden="true"></i> تسجيل من اشترى</li>
+                        <li><i class="bi bi-check2" aria-hidden="true"></i> تعديل البيعة المحفوظة</li>
+                    </ul>
+                    <p class="feature-callout mb-0">البيع يتم بسرعة — بدون إنترنت وبدون انتظار.</p>
+                </article>
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-4 col-xl-3">
+                <article class="feature-card">
+                    <span class="feature-icon"><i class="bi bi-box-seam" aria-hidden="true"></i></span>
+                    <h3>المخزون والتسعير</h3>
+                    <ul class="feature-list">
+                        <li><i class="bi bi-check2" aria-hidden="true"></i> حبة، كرتونة، صندوق، كيلو، والبيع بالوزن</li>
+                        <li><i class="bi bi-check2" aria-hidden="true"></i> سعر لكل مستوى وسعر الكمية</li>
+                        <li><i class="bi bi-check2" aria-hidden="true"></i> سجل حركة الصنف</li>
+                        <li><i class="bi bi-check2" aria-hidden="true"></i> دمج الأصناف</li>
+                        <li><i class="bi bi-check2" aria-hidden="true"></i> تدقيق أخطاء التسعير</li>
+                    </ul>
+                    <p class="feature-callout mb-0">تسعير مرن لكل مستوى تغليف، من الحبة حتى الصندوق.</p>
+                </article>
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-4 col-xl-3">
+                <article class="feature-card">
+                    <span class="feature-icon"><i class="bi bi-people" aria-hidden="true"></i></span>
+                    <h3>الزبائن والديون</h3>
+                    <ul class="feature-list">
+                        <li><i class="bi bi-check2" aria-hidden="true"></i> حساب كامل للزبون</li>
+                        <li><i class="bi bi-check2" aria-hidden="true"></i> أفراد العائلة على حساب واحد</li>
+                        <li><i class="bi bi-check2" aria-hidden="true"></i> طرق تحصيل متعددة</li>
+                        <li><i class="bi bi-check2" aria-hidden="true"></i> رسالة جاهزة بملخص الحساب</li>
+                        <li><i class="bi bi-check2" aria-hidden="true"></i> الحسابات الداخلية</li>
+                    </ul>
+                    <p class="feature-callout mb-0">بضغطة بيفتح تطبيق الرسائل بنص مكتوب: شو باقي على الزبون ورمز دخوله.</p>
+                </article>
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-4 col-xl-3">
+                <article class="feature-card">
+                    <span class="feature-icon"><i class="bi bi-phone-flip" aria-hidden="true"></i></span>
+                    <h3>بوابة الزبون</h3>
+                    <ul class="feature-list">
+                        <li><i class="bi bi-check2" aria-hidden="true"></i> دخول برقم الجوال ورمز</li>
+                        <li><i class="bi bi-check2" aria-hidden="true"></i> رؤية المشتريات وتفاصيل كل بيعة</li>
+                        <li><i class="bi bi-check2" aria-hidden="true"></i> معرفة من قام بالشراء</li>
+                        <li><i class="bi bi-check2" aria-hidden="true"></i> بدون رؤية التكلفة أو هامش الربح</li>
+                        <li><i class="bi bi-check2" aria-hidden="true"></i> بدون تحميل بيانات المحل على جهاز الزبون</li>
+                    </ul>
+                    <p class="feature-callout mb-0">زبونك بشوف حسابه بنفسه- مشترياته بالتفصيل ومين اشترى وشو دفع وشو باقي عليه.</p>
+                </article>
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-4 col-xl-3">
+                <article class="feature-card">
+                    <span class="feature-icon"><i class="bi bi-pie-chart" aria-hidden="true"></i></span>
+                    <h3>التقارير والأرباح</h3>
+                    <ul class="feature-list">
+                        <li><i class="bi bi-check2" aria-hidden="true"></i> المبيعات وتكلفة البضاعة المباعة</li>
+                        <li><i class="bi bi-check2" aria-hidden="true"></i> الربح الإجمالي والمصاريف وصافي الربح</li>
+                        <li><i class="bi bi-check2" aria-hidden="true"></i> أفضل الأصناف وأرباح الثلاجة</li>
+                        <li><i class="bi bi-check2" aria-hidden="true"></i> قيمة المخزون والربح الكامن</li>
+                        <li><i class="bi bi-check2" aria-hidden="true"></i> المصاريف حسب التصنيف وتوزيع طرق الدفع</li>
+                    </ul>
+                    <p class="feature-callout mb-0">مبيعات وتكلفة بضاعة ومصاريف وصافي ربح — لليوم أو لأي فترة تختارها.</p>
+                </article>
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-4 col-xl-3">
+                <article class="feature-card">
+                    <span class="feature-icon"><i class="bi bi-clipboard-data" aria-hidden="true"></i></span>
+                    <h3>الجرد</h3>
+                    <ul class="feature-list">
+                        <li><i class="bi bi-check2" aria-hidden="true"></i> جلسة جرد لكل رفّ أو ثلاجة</li>
+                        <li><i class="bi bi-check2" aria-hidden="true"></i> العد بالمسح أو اليد أو الوزن</li>
+                        <li><i class="bi bi-check2" aria-hidden="true"></i> مراجعة الفروقات قبل الاعتماد</li>
+                    </ul>
+                    <p class="feature-callout mb-0">بدون تسكير المحل - والبيع أثناء الجرد.</p>
+                </article>
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-4 col-xl-3">
+                <article class="feature-card">
+                    <span class="feature-icon"><i class="bi bi-arrow-repeat" aria-hidden="true"></i></span>
+                    <h3>المزامنة</h3>
+                    <ul class="feature-list">
+                        <li><i class="bi bi-check2" aria-hidden="true"></i> العمل بدون انترنت</li>
+                        <li><i class="bi bi-check2" aria-hidden="true"></i> المزامنة تلقائية عند عودة الاتصال/li>
+                        <li><i class="bi bi-check2" aria-hidden="true"></i> عدة أجهزة وبيانات موحدة</li>
+                    </ul>
+                    <p class="feature-callout mb-3">المحل واحد ولو تعددت الأجهزة.</p>
+                </article>
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-4 col-xl-3">
+                <article class="feature-card">
+                    <span class="feature-icon"><i class="bi bi-shield-check" aria-hidden="true"></i></span>
+                    <h3>الحماية من الخطأ البشري</h3>
+                    <ul class="feature-list">
+                        <li><i class="bi bi-check2" aria-hidden="true"></i> سلة المحذوفات واسترجاع البيانات</li>
+                        <li><i class="bi bi-check2" aria-hidden="true"></i> التراجع عن دمج الأصناف</li>
+                        <li><i class="bi bi-check2" aria-hidden="true"></i> تسجيل من أنشأ وعدّل ووقت التعديل</li>
+                        <li><i class="bi bi-check2" aria-hidden="true"></i> خيارات حذف الحركة أو عكس أثرها على المخزون</li>
+                    </ul>
+                    <p class="feature-callout mb-0">تحكم كامل في عمليات المتجر.</p>
+                </article>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Pricing (from database) -->
+<section class="section pricing-section" id="pricing" aria-labelledby="pricing-title">
+    <div class="container">
+        <p class="section-kicker">الأسعار</p>
+        <h2 class="section-title" id="pricing-title">خطط بسيطة تناسب محلّك</h2>
+        <p class="section-sub mb-4">اختر خطتك وابدأ. الأسعار قابلة للتعديل من لوحة التحكم.</p>
+        @if (plans.Count == 0)
+        {
+            <p class="text-body-secondary text-center">الخطط متاحة قريباً. تواصل معنا عبر واتساب للتفاصيل.</p>
+        }
+        else
+        {
+            <div class="row g-4 justify-content-center">
+                @foreach (var plan in plans)
+                {
+                    var featured = plan.IsTrial || plan == plans[0];
+                    <div class="col-12 col-sm-6 col-lg-3">
+                        <div class="price-card @(featured ? "featured" : "")">
+                            <span class="plan-name">@plan.Name</span>
+                            <span class="plan-duration">@Dukan.Web.Application.Display.DurationDisplay.Format(plan.Duration, plan.DurationUnit)</span>
+                            <div class="plan-price">
+                                @if (plan.IsTrial || plan.Price == 0)
+                                {
+                                    <span>مجاني</span>
+                                }
+                                else
+                                {
+                                    <span>@plan.Price.ToString("0.##") @plan.Currency</span>
+                                }
+                            </div>
+                            @if (!string.IsNullOrWhiteSpace(plan.Description))
+                            {
+                                    <p class="plan-desc feature-callout mb-0">@plan.Description</p>
+                            }
+                            <a class="btn @(featured ? "btn-primary" : "btn-outline-primary") mt-3" asp-controller="Subscription" asp-action="Index">اختر خطتك</a>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</section>
+
+<!-- Subscribe: form + what happens after -->
+<section class="section bg-green-50" id="subscribe" aria-labelledby="subscribe-title">
+    <div class="container">
+        <div class="row g-5 align-items-center">
+
+            <!-- Form (right in RTL) -->
+            <div class="col-12 col-lg-6">
+                <p class="section-kicker text-center">اشترك الآن</p>
+                <h2 class="section-title text-center" id="subscribe-title">اطلب اشتراكك الآن</h2>
+                <p class="section-sub mx-auto text-center mb-4">املأ النموذج وسنتواصل معك عبر واتساب لإكمال الإجراءات.</p>
+
+                @if (!ViewData.ModelState.IsValid && ViewData.ModelState[string.Empty] is { Errors.Count: > 0 } errorState)
+                {
+                    <div class="alert alert-danger" role="alert">
+                        @string.Join(" ", errorState.Errors.Select(e => e.ErrorMessage))
+                    </div>
+                }
+
+                <div class="card shadow-sm border-0">
+                    <div class="card-body p-4">
+                        <form method="post" asp-controller="Subscription" asp-action="Index">
+                            <div asp-validation-summary="ModelOnly" class="text-danger d-none"></div>
+
+                            <div class="mb-3">
+                                <label asp-for="FullName" class="form-label">الاسم الكامل *</label>
+                                <input asp-for="FullName" class="form-control" placeholder="مثال: أحمد محمد" autocomplete="name" />
+                                <span asp-validation-for="FullName" class="field-validation-error"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="StoreName" class="form-label">اسم المتجر *</label>
+                                <input asp-for="StoreName" class="form-control" placeholder="مثال: سوبرماركت الأمانة" />
+                                <span asp-validation-for="StoreName" class="field-validation-error"></span>
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-12 col-sm-6">
+                                    <label asp-for="Phone" class="form-label">رقم الهاتف *</label>
+                                    <input asp-for="Phone" class="form-control" placeholder="مثال: 0555123456" dir="ltr" autocomplete="tel" inputmode="tel" />
+                                    <span asp-validation-for="Phone" class="field-validation-error"></span>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <label asp-for="WhatsAppNumber" class="form-label">رقم الواتساب *</label>
+                                    <input asp-for="WhatsAppNumber" class="form-control" placeholder="مثال: 0555123456" dir="ltr" autocomplete="tel" inputmode="tel" />
+                                    <span asp-validation-for="WhatsAppNumber" class="field-validation-error"></span>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="PlanId" class="form-label">الخطة المطلوبة *</label>
+                                <select asp-for="PlanId" class="form-select" required>
+                                    <option value="">اختر الخطة…</option>
+                                    @foreach (var plan in plans)
+                                    {
+                                        <option value="@plan.Id">@plan.Name — @Dukan.Web.Application.Display.DurationDisplay.Format(plan.Duration, plan.DurationUnit)@(plan.Price == 0 || plan.IsTrial ? " (مجاني)" : $" — {plan.Price.ToString("0.##")} {plan.Currency}")</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="PlanId" class="field-validation-error"></span>
+                            </div>
+
+                            <div class="mb-4">
+                                <label asp-for="Notes" class="form-label">ملاحظات</label>
+                                <textarea asp-for="Notes" class="form-control" rows="3" placeholder="اكتب أي تفاصيل إضافية (اختياري)"></textarea>
+                                <span asp-validation-for="Notes" class="field-validation-error"></span>
+                            </div>
+
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary btn-lg">إرسال الطلب</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- What happens after (left in RTL) -->
+            <div class="col-12 col-lg-6">
+                <p class="section-kicker text-center">بعد ما تبعت</p>
+                <h2 class="section-title text-center" id="how-title">شو بصير بعد ما تبعت؟</h2>
+                <p class="section-sub mx-auto text-center mb-4">من رسالتك لحد ما تصير بتشتغل — أربع خطوات بسيطة.</p>
+
+                <div class="row g-3">
+                    <div class="col-sm-6">
+                        <article class="step-card">
+                            <div class="step-card-top">
+                                <span class="step-number">1</span>
+                                <span class="step-icon"><i class="bi bi-headset" aria-hidden="true"></i></span>
+                            </div>
+                            <h3>بنتصل فيك خلال ٢٤ ساعة</h3>
+                            <p>نفهم شغل محلك وكم جهاز عندك.</p>
+                        </article>
+                    </div>
+                    <div class="col-sm-6">
+                        <article class="step-card">
+                            <div class="step-card-top">
+                                <span class="step-number">2</span>
+                                <span class="step-icon"><i class="bi bi-tools" aria-hidden="true"></i></span>
+                            </div>
+                            <h3>بنركّب النظام</h3>
+                            <p>بندخّل أصنافك وديون زبائنك من دفترك.</p>
+                        </article>
+                    </div>
+                    <div class="col-sm-6">
+                        <article class="step-card">
+                            <div class="step-card-top">
+                                <span class="step-number">3</span>
+                                <span class="step-icon"><i class="bi bi-mortarboard" aria-hidden="true"></i></span>
+                            </div>
+                            <h3>بندرّبك أنت وعمّالك</h3>
+                            <p>نص ساعة بتكفي، البرنامج بسيط.</p>
+                        </article>
+                    </div>
+                    <div class="col-sm-6">
+                        <article class="step-card">
+                            <div class="step-card-top">
+                                <span class="step-number">4</span>
+                                <span class="step-icon"><i class="bi bi-rocket-takeoff" aria-hidden="true"></i></span>
+                            </div>
+                            <h3>بتشتغل</h3>
+                            <p>وبنضلّ معك للدعم طول فترة اشتراكك.</p>
+                        </article>
+                    </div>
+                </div>
+
+                <p class="step-call">
+                    <i class="bi bi-telephone" aria-hidden="true"></i>
+                    <span>بتفضّل تحكي بدل ما تكتب؟</span>
+                    <a href="tel:@ViewData["WhatsAppNumber"]" dir="ltr">+972 59 741 7181</a>
+                </p>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- Bottom CTA -->
+<section class="section" aria-labelledby="cta-title">
+    <div class="container">
+        <div class="cta-band">
+            <h2 id="cta-title">جاهز تبدأ مع دكان؟</h2>
+            <p>اطلب اشتراكك الآن أو تحدث معنا عبر واتساب، وسنرجع لك في أقرب وقت.</p>
+            <div class="d-flex flex-wrap justify-content-center gap-3">
+                    <a class="btn btn-amber btn-lg" href="#subscribe">
+                    <i class="bi bi-send me-1" aria-hidden="true"></i> اطلب اشتراكك الآن
+                </a>
+                <a class="btn btn-whatsapp btn-lg" href="https://wa.me/@ViewData["WhatsAppNumber"]" target="_blank" rel="noopener">
+                    <i class="bi bi-whatsapp me-1" aria-hidden="true"></i> تحدث معنا عبر واتساب
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

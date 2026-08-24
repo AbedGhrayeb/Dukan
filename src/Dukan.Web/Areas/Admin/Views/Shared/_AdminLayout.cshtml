@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - دكان</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.rtl.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/bootstrap-icons.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛒</text></svg>">
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body class="admin-layout bg-light">
+    <div class="d-flex flex-column flex-lg-row min-vh-100">
+        <aside class="admin-sidebar bg-white p-3 flex-shrink-0">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <a class="navbar-brand d-flex align-items-center gap-2" asp-area="" asp-controller="Home" asp-action="Index">
+                    <span class="brand-mark" aria-hidden="true">د</span>
+                    <span class="brand-name">دكان</span>
+                </a>
+                <span class="badge badge-pending">لوحة التحكم</span>
+            </div>
+            <nav aria-label="التنقل في لوحة التحكم">
+                <ul class="nav flex-column gap-1">
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Dashboard" ? "active" : "")"
+                           asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
+                            <i class="bi bi-speedometer2 me-1" aria-hidden="true"></i> لوحة التحكم
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Plans" ? "active" : "")"
+                           asp-area="Admin" asp-controller="Plans" asp-action="Index">
+                            <i class="bi bi-tags me-1" aria-hidden="true"></i> الخطط
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Requests" ? "active" : "")"
+                           asp-area="Admin" asp-controller="Requests" asp-action="Index">
+                            <i class="bi bi-inbox me-1" aria-hidden="true"></i> طلبات الاشتراك
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Customers" ? "active" : "")"
+                           asp-area="Admin" asp-controller="Customers" asp-action="Index">
+                            <i class="bi bi-people me-1" aria-hidden="true"></i> العملاء
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Subscriptions" ? "active" : "")"
+                           asp-area="Admin" asp-controller="Subscriptions" asp-action="Index">
+                            <i class="bi bi-badge-check me-1" aria-hidden="true"></i> الاشتراكات
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "FirebaseConfig" ? "active" : "")"
+                           asp-area="Admin" asp-controller="FirebaseConfig" asp-action="Index">
+                            <i class="bi bi-badge-check me-1" aria-hidden="true"></i> تهيئة Firebase
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "RemoteConfig" ? "active" : "")"
+                           asp-area="Admin" asp-controller="RemoteConfig" asp-action="Index">
+                            <i class="bi bi-badge-check me-1" aria-hidden="true"></i> إعدادات التطبيق
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="flex-grow-1" style="min-width: 0;">
+            <div class="bg-white border-bottom">
+                <div class="admin-content d-flex justify-content-end align-items-center p-3">
+                    <form asp-area="Admin" asp-controller="Account" asp-action="Logout" method="post" class="mb-0">
+                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                            <i class="bi bi-box-arrow-left me-1" aria-hidden="true"></i> تسجيل الخروج
+                        </button>
+                    </form>
+                </div>
+            </div>
+            <div class="p-3 p-lg-4">
+                <div class="admin-content">
+                    <h1 class="h3 mb-4">@ViewData["Title"]</h1>
+                    @if (TempData["SuccessMessage"] is not null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show auto-dismiss" role="alert">@TempData["SuccessMessage"]<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="إغلاق"></button></div>
+                    }
+                    @if (TempData["ErrorMessage"] is not null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">@TempData["ErrorMessage"]<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="إغلاق"></button></div>
+                    }
+                    @RenderBody()
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- تأكيد إجراء -->
+    <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 overflow-hidden">
+                <div class="modal-header" id="confirmModalHeader">
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="plan-modal-header-icon" id="confirmModalIcon" aria-hidden="true"></span>
+                        <div>
+                            <h5 class="modal-title mb-0" id="confirmModalLabel"></h5>
+                            <p class="plan-modal-subtitle mb-0" id="confirmModalSubtitle"></p>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+                </div>
+                <div class="modal-body" id="confirmModalBody"></div>
+                <div class="modal-footer bg-body-tertiary">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn" id="confirmModalBtn">
+                        <span class="spinner-border spinner-border-sm me-1 d-none" id="confirmModalSpinner" aria-hidden="true"></span>
+                        <span id="confirmModalBtnText"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/dist/jquery.validate.unobtrusive.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        // auto-dismiss TempData success after 4s (like Plans #plansAlert) — keep error until manually dismissed
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.alert-success.auto-dismiss').forEach(el => {
+                setTimeout(() => {
+                    const bs = bootstrap.Alert.getOrCreateInstance(el);
+                    bs.close();
+                }, 4000);
+            });
+        });
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

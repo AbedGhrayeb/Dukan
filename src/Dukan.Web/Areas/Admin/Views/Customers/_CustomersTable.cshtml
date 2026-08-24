@@ -1,0 +1,97 @@
+@using Dukan.Web.Domain.Entities
+@model PagedResult<CustomerDto>
+@{
+    var search = ViewData["Search"] as string;
+    var hasFirebaseMap = ViewData["HasFirebaseMap"] as Dictionary<Guid, bool>;
+    var latestSubMap = ViewData["LatestSubscriptionMap"] as Dictionary<Guid, Guid>;
+    // Fallback for legacy
+    var firebaseConfigsLegacy = ViewData["FirebaseConfigs"] as Dictionary<Guid, FirebaseConfig>;
+}
+
+@if (Model.Items.Count == 0)
+{
+    <div class="text-center py-5">
+        <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-light mb-3" style="width:4rem;height:4rem;">
+            <i class="bi bi-people fs-3 text-body-tertiary" aria-hidden="true"></i>
+        </div>
+        <h2 class="h6 text-body-secondary">لا يوجد عملاء</h2>
+        @if (!string.IsNullOrWhiteSpace(search))
+        {
+            <p class="text-body-secondary small mb-2">لا توجد نتائج لـ "<strong>@search</strong>"</p>
+            <button type="button" class="btn btn-sm btn-outline-secondary js-customers-clear">مسح البحث</button>
+        }
+        else
+        {
+            <p class="text-body-secondary small">لم يتم تسجيل أي عميل بعد.</p>
+        }
+    </div>
+}
+else
+{
+    <div class="card shadow-sm border-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>الاسم</th>
+                        <th>المتجر</th>
+                        <th>الهاتف</th>
+                        <th>الواتساب</th>
+                        <th>Firebase</th>
+                        <th>تاريخ التسجيل</th>
+                        <th style="width: 160px;">إجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var customer in Model.Items)
+                    {
+                        bool hasFirebase = false;
+                        if (hasFirebaseMap != null && hasFirebaseMap.TryGetValue(customer.Id, out var hf)) hasFirebase = hf;
+                        else if (firebaseConfigsLegacy != null) hasFirebase = firebaseConfigsLegacy.ContainsKey(customer.Id);
+
+                        Guid latestSubId = Guid.Empty;
+                        if (latestSubMap != null && latestSubMap.TryGetValue(customer.Id, out var sid)) latestSubId = sid;
+
+                        <tr>
+                            <td class="fw-semibold">@customer.FullName</td>
+                            <td class="fw-semibold text-primary">@customer.StoreName</td>
+                            <td dir="ltr">@customer.Phone</td>
+                            <td dir="ltr">@customer.WhatsAppNumber</td>
+                            <td>
+                                @if (hasFirebase)
+                                {
+                                    <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i> مُهيأ</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle me-1"></i> غير مُهيأ</span>
+                                }
+                            </td>
+                            <td>@customer.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd")</td>
+                            <td>
+                                <a class="btn btn-sm btn-outline-primary" asp-area="Admin" asp-controller="Customers" asp-action="Details" asp-route-id="@customer.Id">عرض</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    @if (Model.TotalPages > 1)
+    {
+        <nav aria-label="صفحات العملاء" class="mt-3">
+            <ul class="pagination justify-content-center mb-0">
+                @for (var i = 1; i <= Model.TotalPages; i++)
+                {
+                    <li class="page-item @(i == Model.Page ? "active" : "")">
+                        <a class="page-link js-customer-page" href="#" data-page="@i" data-search="@search">@i</a>
+                    </li>
+                }
+            </ul>
+        </nav>
+    }
+    <div class="text-center text-body-secondary small mt-2">
+        عرض @Model.Items.Count من أصل @Model.TotalCount عميل
+    </div>
+}

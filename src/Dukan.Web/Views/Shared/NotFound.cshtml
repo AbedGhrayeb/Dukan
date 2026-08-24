@@ -1,0 +1,19 @@
+@{
+    ViewData["Title"] = "الصفحة غير موجودة";
+}
+
+<section class="section bg-green-50">
+    <div class="container text-center" style="max-width: 36rem;">
+        <i class="bi bi-search" style="font-size: 3.5rem; color: var(--dk-amber-500);" aria-hidden="true"></i>
+        <h1 class="section-title mt-3">الصفحة غير موجودة</h1>
+        <p class="section-sub mx-auto">
+            عذراً، لم نجد الصفحة التي تبحث عنها. ربما تم نقلها أو حذفها.
+        </p>
+        <div class="d-flex flex-wrap justify-content-center gap-3 mt-4">
+            <a class="btn btn-primary" asp-controller="Home" asp-action="Index">العودة للرئيسية</a>
+            <a class="btn btn-whatsapp" href="https://wa.me/@ViewData["WhatsAppNumber"]" target="_blank" rel="noopener">
+                <i class="bi bi-whatsapp me-1" aria-hidden="true"></i> تواصل معنا عبر واتساب
+            </a>
+        </div>
+    </div>
+</section>

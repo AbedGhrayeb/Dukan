@@ -1,0 +1,238 @@
+@using Dukan.Web.Application.Interfaces
+@model SubscriptionDto
+@{
+    ViewData["Title"] = "تفاصيل الاشتراك";
+    var hasFirebase = ViewData["HasFirebase"] as bool? ?? false;
+    var firebaseDto = ViewData["FirebaseDto"] as FirebaseConfigDto;
+    var initials = string.IsNullOrWhiteSpace(Model.CustomerName) ? "?" : string.Join("", Model.CustomerName.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(s => s[0].ToString().ToUpperInvariant()));
+}
+
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb mb-0 small">
+        <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Dashboard" asp-action="Index" class="text-decoration-none">لوحة التحكم</a></li>
+        <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Subscriptions" asp-action="Index" class="text-decoration-none">الاشتراكات</a></li>
+        <li class="breadcrumb-item active" aria-current="page">تفاصيل الاشتراك</li>
+    </ol>
+</nav>
+
+<div class="card border-0 shadow-sm overflow-hidden mb-4">
+    <div class="card-body p-4">
+        <div class="d-flex flex-column flex-lg-row gap-4 align-items-start">
+            <div class="d-flex gap-3 flex-grow-1 min-w-0">
+                <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary text-white fw-bold flex-shrink-0 shadow-sm" style="width:4rem;height:4rem;font-size:1.3rem;">@initials</span>
+                <div class="flex-grow-1 min-w-0">
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        <h1 class="h5 mb-0">@Model.CustomerName</h1>
+                        <span class="badge @StatusDisplay.GetBadgeClass(Model.Status)">@StatusDisplay.GetLabel(Model.Status)</span>
+                        <span class="badge @(hasFirebase ? "bg-success" : "bg-warning text-dark")">
+                            <i class="bi @(hasFirebase ? "bi-check-circle" : "bi-exclamation-triangle") me-1"></i>@(hasFirebase ? "Firebase مُهيأ" : "Firebase غير مُهيأ")
+                        </span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 mt-1 text-primary fw-semibold">
+                        <i class="bi bi-shop small"></i> @Model.CustomerStoreName
+                        <span class="text-body-secondary fw-normal">•</span>
+                        <span class="text-dark fw-semibold"><i class="bi bi-box-seam me-1"></i>@Model.PlanName</span>
+                        <span class="badge bg-light text-dark border">@Model.DurationLable</span>
+                        <span class="text-success fw-bold">@Model.DisplayPrice</span>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2 mt-3 small text-body-secondary">
+                        <span><i class="bi bi-telephone me-1"></i><span dir="ltr">@Model.CustomerPhone</span></span>
+                        <span class="vr"></span>
+                        <span><i class="bi bi-calendar-event me-1"></i>طلب: @Model.RequestAt</span>
+                        @if (!string.IsNullOrWhiteSpace(Model.StartDate)) { <span class="vr"></span><span><i class="bi bi-play-circle me-1"></i>يبدأ: @Model.StartDate</span> }
+                        @if (!string.IsNullOrWhiteSpace(Model.EndDate)) { <span class="vr"></span><span><i class="bi bi-stop-circle me-1"></i>ينتهي: @Model.EndDate</span> }
+                    </div>
+                </div>
+            </div>
+            <div class="d-flex flex-lg-column gap-2 flex-shrink-0">
+                <a class="btn btn-outline-secondary btn-sm" asp-area="Admin" asp-controller="Subscriptions" asp-action="Index"><i class="bi bi-arrow-right me-1"></i> رجوع</a>
+                <a class="btn btn-outline-primary btn-sm" asp-area="Admin" asp-controller="Customers" asp-action="Details" asp-route-id="@Model.CustomerId"><i class="bi bi-person me-1"></i> عرض العميل</a>
+            </div>
+        </div>
+    </div>
+    <div class="bg-light border-top px-4 py-3">
+        <div class="row g-3 small">
+            <div class="col-6 col-lg-3">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="d-inline-flex align-items-center justify-content-center rounded-2 bg-primary bg-opacity-10" style="width:2rem;height:2rem;"><i class="bi bi-receipt text-primary"></i></span>
+                    <div><div class="text-body-secondary">رقم الطلب</div><div class="font-monospace fw-semibold">@Model.Id.ToString()[..8]…</div></div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="d-inline-flex align-items-center justify-content-center rounded-2 bg-info bg-opacity-10" style="width:2rem;height:2rem;"><i class="bi bi-calendar-week text-info"></i></span>
+                    <div><div class="text-body-secondary">المدة</div><div class="fw-semibold">@Model.DurationLable</div></div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="d-inline-flex align-items-center justify-content-center rounded-2 bg-success bg-opacity-10" style="width:2rem;height:2rem;"><i class="bi bi-currency-dollar text-success"></i></span>
+                    <div><div class="text-body-secondary">السعر</div><div class="fw-semibold">@Model.DisplayPrice</div></div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="d-inline-flex align-items-center justify-content-center rounded-2 @(hasFirebase ? "bg-success bg-opacity-10" : "bg-warning bg-opacity-10")" style="width:2rem;height:2rem;"><i class="bi bi-gear @(hasFirebase ? "text-success" : "text-warning")"></i></span>
+                    <div><div class="text-body-secondary">Firebase</div><div class="fw-bold @(hasFirebase ? "text-success" : "text-warning")">@(hasFirebase ? "مُهيأ" : "غير مُهيأ")</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-12 col-xl-8">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-bottom py-3 d-flex align-items-center gap-2">
+                <span class="d-inline-flex align-items-center justify-content-center rounded-2 bg-primary bg-opacity-10" style="width:2rem;height:2rem;"><i class="bi bi-info-circle text-primary"></i></span>
+                <h2 class="h6 mb-0">تفاصيل الاشتراك</h2>
+            </div>
+            <div class="card-body">
+                <div class="row g-3 small">
+                    <div class="col-6">
+                        <div class="text-body-secondary">العميل</div>
+                        <div class="fw-semibold">@Model.CustomerName</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-body-secondary">المتجر</div>
+                        <div class="fw-semibold text-primary">@Model.CustomerStoreName</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-body-secondary">الهاتف</div>
+                        <div dir="ltr" class="fw-semibold">@Model.CustomerPhone</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-body-secondary">الواتساب</div>
+                        <div dir="ltr" class="fw-semibold">@Model.CustomerWhatsAppNumber</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-body-secondary">الخطة</div>
+                        <div class="fw-semibold">@Model.PlanName</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-body-secondary">الحالة</div>
+                        <span class="badge @StatusDisplay.GetBadgeClass(Model.Status)">@StatusDisplay.GetLabel(Model.Status)</span>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-body-secondary">تاريخ الطلب</div>
+                        <div>@Model.RequestAt</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-body-secondary">تاريخ البدء</div>
+                        <div>@(Model.StartDate ?? "-")</div>
+                    </div>
+                    <div class="col-12">
+                        <div class="text-body-secondary">تاريخ الانتهاء</div>
+                        <div class="fw-semibold">@(Model.EndDate ?? "-")</div>
+                    </div>
+                </div>
+                @if (!string.IsNullOrWhiteSpace(Model.AdminNotes))
+                {
+                    <div class="alert alert-light border mt-3 mb-0 small">
+                        <i class="bi bi-sticky me-1"></i> ملاحظة سابقة: @Model.AdminNotes
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom py-3 d-flex align-items-center gap-2">
+                <span class="d-inline-flex align-items-center justify-content-center rounded-2 bg-warning bg-opacity-10" style="width:2rem;height:2rem;"><i class="bi bi-pencil text-warning"></i></span>
+                <h2 class="h6 mb-0">ملاحظات المدير</h2>
+            </div>
+            <div class="card-body">
+                <form method="post" asp-area="Admin" asp-controller="Subscriptions" asp-action="EditNotes" asp-route-id="@Model.Id">
+                    <label for="adminNotes" class="form-label small fw-semibold">ملاحظة داخلية</label>
+                    <textarea id="adminNotes" name="adminNotes" class="form-control mb-2" rows="4" placeholder="أضف ملاحظة للمتابعة…">@Model.AdminNotes</textarea>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-body-secondary small"><i class="bi bi-lock me-1"></i>مرئية للمسؤول فقط</span>
+                        <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-save me-1"></i> حفظ الملاحظات</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-xl-4">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h3 class="h6 mb-0 d-flex align-items-center gap-2"><i class="bi bi-gear text-primary"></i> Firebase للاشتراك</h3>
+                <span class="badge @(hasFirebase ? "bg-success" : "bg-warning text-dark")">@(hasFirebase ? "مُهيأ" : "غير مُهيأ")</span>
+            </div>
+            <div class="card-body">
+                @if (hasFirebase && firebaseDto != null)
+                {
+                    <div class="bg-light rounded-3 p-3 small mb-3">
+                        <div class="d-flex justify-content-between mb-1"><span class="text-body-secondary">Project ID</span><code class="fw-semibold">@firebaseDto.ProjectId</code></div>
+                        <div class="d-flex justify-content-between"><span class="text-body-secondary">Client Email</span><span class="text-break fw-semibold small" dir="ltr">@firebaseDto.ClientEmail</span></div>
+                        <div class="d-flex justify-content-between mt-1"><span class="text-body-secondary">آخر تحديث</span><span class="small">@firebaseDto.UpdatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</span></div>
+                    </div>
+                    <div class="alert alert-light border small py-2 mb-3" style="word-break: break-all;"><i class="bi bi-braces me-1"></i>@firebaseDto.MaskedJsonPreview</div>
+                    <div class="d-grid gap-2">
+                        <a asp-area="Admin" asp-controller="FirebaseConfig" asp-action="Index" asp-route-subscriptionId="@Model.Id" class="btn btn-outline-primary btn-sm"><i class="bi bi-gear me-1"></i> تعديل Firebase</a>
+                        <a asp-area="Admin" asp-controller="RemoteConfig" asp-action="Index" asp-route-subscriptionId="@Model.Id" class="btn btn-primary btn-sm"><i class="bi bi-sliders me-1"></i> إعدادات التطبيق</a>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-warning d-flex gap-2 mb-3">
+                        <i class="bi bi-exclamation-triangle fs-5 flex-shrink-0"></i>
+                        <div>
+                            <div class="fw-semibold">Firebase غير مُهيأ</div>
+                            <div class="small">هذا الاشتراك يملك مشروع Firebase منفصل — يجب تهيئته قبل التفعيل أو التجديد.</div>
+                        </div>
+                    </div>
+                    <a asp-area="Admin" asp-controller="FirebaseConfig" asp-action="Index" asp-route-subscriptionId="@Model.Id" class="btn btn-warning w-100"><i class="bi bi-gear me-1"></i> تهيئة Firebase الآن</a>
+                    <a asp-area="Admin" asp-controller="RemoteConfig" asp-action="Index" asp-route-subscriptionId="@Model.Id" class="btn btn-outline-secondary w-100 mt-2 disabled" aria-disabled="true"><i class="bi bi-sliders me-1"></i> إعدادات التطبيق (بانتظار Firebase)</a>
+                }
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h3 class="h6 mb-3">إجراءات الاشتراك</h3>
+                @if (Model.Status == SubscriptionStatus.Active)
+                {
+                    <div class="alert alert-info small py-2">
+                        <i class="bi bi-info-circle me-1"></i> الاشتراك نشط حتى <strong>@Model.EndDate</strong>
+                    </div>
+                    <form method="post" asp-area="Admin" asp-controller="Subscriptions" asp-action="Cancel" asp-route-id="@Model.Id" data-confirm="cancel-sub">
+                        <button type="submit" class="btn btn-danger w-100"><i class="bi bi-x-circle me-1"></i> إلغاء الاشتراك</button>
+                    </form>
+                }
+                else if (Model.Status is SubscriptionStatus.Expired or SubscriptionStatus.Cancelled)
+                {
+                    @if (!hasFirebase)
+                    {
+                        <div class="alert alert-warning py-2 small">
+                            <i class="bi bi-exclamation-triangle me-1"></i> يجب تهيئة Firebase لهذا الاشتراك قبل التجديد. كل اشتراك يملك مشروع Firebase منفصل.
+                        </div>
+                    }
+                    <form method="post" asp-area="Admin" asp-controller="Subscriptions" asp-action="Renew" asp-route-id="@Model.Id" data-confirm="renew">
+                        <button type="submit" class="btn btn-primary w-100" disabled="@(!hasFirebase ? "disabled" : null)" title="@(!hasFirebase ? "يجب تهيئة Firebase لهذا الاشتراك أولاً" : null)"><i class="bi bi-arrow-clockwise me-1"></i> تجديد الاشتراك</button>
+                    </form>
+                    @if (!hasFirebase)
+                    {
+                        <a asp-area="Admin" asp-controller="FirebaseConfig" asp-action="Index" asp-route-subscriptionId="@Model.Id" class="btn btn-warning w-100 mt-2"><i class="bi bi-gear me-1"></i> تهيئة Firebase للاشتراك</a>
+                    }
+                }
+                else if (Model.Status == SubscriptionStatus.Pending)
+                {
+                    <div class="alert alert-warning small py-2">
+                        <i class="bi bi-hourglass-split me-1"></i> اشتراك قيد الانتظار — يحتاج تفعيل عبر <a asp-area="Admin" asp-controller="Requests" asp-action="Details" asp-route-id="@Model.Id" class="alert-link">صفحة الطلب</a>.
+                    </div>
+                    <a asp-area="Admin" asp-controller="Requests" asp-action="Details" asp-route-id="@Model.Id" class="btn btn-primary w-100"><i class="bi bi-inbox me-1"></i> معالجة الطلب</a>
+                }
+                else
+                {
+                    <p class="text-body-secondary small mb-0">لا توجد إجراءات متاحة لهذه الحالة.</p>
+                }
+                <hr class="my-3" />
+                <div class="d-flex flex-column gap-2 small">
+                    <a asp-area="Admin" asp-controller="Customers" asp-action="Details" asp-route-id="@Model.CustomerId" class="btn btn-outline-secondary btn-sm"><i class="bi bi-person me-1"></i> عرض العميل</a>
+                    <a asp-area="Admin" asp-controller="Subscriptions" asp-action="Index" class="btn btn-outline-secondary btn-sm"><i class="bi bi-collection me-1"></i> كل الاشتراكات</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

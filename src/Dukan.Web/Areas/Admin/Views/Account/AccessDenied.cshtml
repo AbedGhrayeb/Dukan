@@ -1,0 +1,28 @@
+@{
+    ViewData["Title"] = "لا تملك الصلاحية";
+    Layout = "_Layout";
+}
+
+<section class="section bg-green-50">
+    <div class="container" style="max-width: 32rem;">
+        <div class="card shadow-sm border-0 text-center">
+            <div class="card-body p-5">
+                <div class="mb-3">
+                    <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-warning bg-opacity-10" style="width: 4.5rem; height: 4.5rem;">
+                        <i class="bi bi-shield-lock" style="font-size: 2.2rem; color: var(--bs-warning);" aria-hidden="true"></i>
+                    </span>
+                </div>
+                <h1 class="h4 mb-2">لا تملك الصلاحية</h1>
+                <p class="text-body-secondary mb-4">ليس لديك صلاحية الوصول إلى هذه الصفحة. قد تحتاج لتسجيل الدخول بحساب مدير.</p>
+                <div class="d-flex flex-column flex-sm-row gap-2 justify-content-center">
+                    <a class="btn btn-primary" asp-area="Admin" asp-controller="Account" asp-action="Login">
+                        <i class="bi bi-box-arrow-in-right me-1" aria-hidden="true"></i> تسجيل الدخول
+                    </a>
+                    <a class="btn btn-outline-secondary" asp-area="" asp-controller="Home" asp-action="Index">
+                        <i class="bi bi-house me-1" aria-hidden="true"></i> العودة للرئيسية
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

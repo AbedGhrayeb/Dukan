@@ -1,0 +1,165 @@
+@using Dukan.Web.Domain.Entities
+@model PagedResult<CustomerDto>
+@{
+    ViewData["Title"] = "العملاء";
+    var search = ViewData["Search"] as string;
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h1 class="h4 mb-1">العملاء</h1>
+        <p class="text-body-secondary small mb-0">إدارة العملاء وحالة Firebase لكل متجر</p>
+    </div>
+    <span class="badge bg-light text-dark border fw-normal">
+        <i class="bi bi-people me-1"></i> @Model.TotalCount عميل
+    </span>
+</div>
+
+<form id="customersSearchForm" class="row g-2 mb-3" method="get" asp-area="Admin" asp-controller="Customers" asp-action="Index" role="search" aria-label="بحث العملاء">
+    <div class="col-12 col-sm-8 col-lg-5">
+        <div class="position-relative">
+            <i class="bi bi-search position-absolute top-50 translate-middle-y text-body-tertiary" style="inset-inline-start: .85rem;" aria-hidden="true"></i>
+            <input id="customersSearchInput" name="search" class="form-control ps-5 pe-5" value="@search" placeholder="ابحث بالاسم، المتجر أو الهاتف…" autocomplete="off" aria-label="بحث" />
+            <button type="button" id="customersClearBtn" class="btn btn-sm position-absolute top-50 translate-middle-y @(string.IsNullOrWhiteSpace(search) ? "d-none" : "")" style="inset-inline-end: .35rem;" aria-label="مسح البحث">
+                <i class="bi bi-x-circle text-body-tertiary"></i>
+            </button>
+        </div>
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-primary" id="customersSearchBtn">
+            <span class="d-inline-flex align-items-center gap-1">
+                <i class="bi bi-search" aria-hidden="true"></i> بحث
+            </span>
+        </button>
+    </div>
+    <div class="col-auto d-flex align-items-center">
+        <span id="customersSearchHint" class="text-body-secondary small d-none">
+            <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span> جارٍ البحث…
+        </span>
+    </div>
+</form>
+
+<div id="customersTableContainer">
+    <partial name="_CustomersTable" model="Model" />
+</div>
+
+@section Scripts {
+    <script>
+        (() => {
+            const form = document.getElementById('customersSearchForm');
+            const input = document.getElementById('customersSearchInput');
+            const clearBtn = document.getElementById('customersClearBtn');
+            const hint = document.getElementById('customersSearchHint');
+            const container = document.getElementById('customersTableContainer');
+            if (!form || !input || !container) return;
+
+            let currentSearch = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(search ?? ""));
+            let debounceTimer = null;
+            let abortController = null;
+
+            const toggleClear = () => {
+                if (!clearBtn) return;
+                clearBtn.classList.toggle('d-none', !input.value.trim());
+            };
+
+            const setLoading = (loading) => {
+                if (!hint) return;
+                hint.classList.toggle('d-none', !loading);
+                container.style.opacity = loading ? '0.6' : '1';
+                container.style.pointerEvents = loading ? 'none' : '';
+            };
+
+            const buildUrl = (searchVal, page) => {
+                const params = new URLSearchParams();
+                if (searchVal && searchVal.trim()) params.set('search', searchVal.trim());
+                if (page && page > 1) params.set('page', String(page));
+                const qs = params.toString();
+                return '@Url.Action("Index", "Customers", new { area = "Admin" })' + (qs ? '?' + qs : '');
+            };
+
+            const pushHistory = (searchVal, page) => {
+                const url = buildUrl(searchVal, page);
+                history.replaceState(null, '', url);
+            };
+
+            const loadTable = async (searchVal, page = 1) => {
+                // abort previous
+                if (abortController) abortController.abort();
+                abortController = new AbortController();
+                setLoading(true);
+                try {
+                    const url = buildUrl(searchVal, page);
+                    const res = await fetch(url, {
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        signal: abortController.signal
+                    });
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    const html = await res.text();
+                    container.innerHTML = html;
+                    currentSearch = searchVal || "";
+                    pushHistory(searchVal, page);
+                    toggleClear();
+                } catch (e) {
+                    if (e.name === 'AbortError') return;
+                    console.error('customers search failed', e);
+                    // fallback: full reload
+                    window.location.href = buildUrl(searchVal, page);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            // form submit -> ajax
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const val = input.value.trim();
+                loadTable(val, 1);
+            });
+
+            // live search with debounce
+            input.addEventListener('input', () => {
+                toggleClear();
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    const val = input.value.trim();
+                    // only auto-search if length >=2 or empty (to clear)
+                    if (val.length === 0 || val.length >= 2 || currentSearch !== val) {
+                        loadTable(val, 1);
+                    }
+                }, 380);
+            });
+
+            if (clearBtn) {
+                clearBtn.addEventListener('click', () => {
+                    input.value = '';
+                    toggleClear();
+                    input.focus();
+                    loadTable('', 1);
+                });
+            }
+
+            // pagination delegation
+            container.addEventListener('click', (e) => {
+                const link = e.target.closest('a.js-customer-page');
+                if (!link) return;
+                e.preventDefault();
+                const page = parseInt(link.dataset.page || '1', 10);
+                const searchVal = link.dataset.search || input.value.trim();
+                loadTable(searchVal, page);
+            });
+
+            // clear button inside partial (when empty)
+            container.addEventListener('click', (e) => {
+                const btn = e.target.closest('.js-customers-clear');
+                if (!btn) return;
+                e.preventDefault();
+                input.value = '';
+                toggleClear();
+                loadTable('', 1);
+            });
+
+            // initial toggle
+            toggleClear();
+        })();
+    </script>
+}

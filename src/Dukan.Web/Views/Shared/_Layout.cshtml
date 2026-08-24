@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>دكان — @ViewData["Title"]</title>
+    <meta name="description" content="دكان يساعدك على إدارة مبيعاتك ومخزونك وديون زبائنك وجردك وتقارير أرباحك، حتى بدون إنترنت." />
+    <meta property="og:title" content="دكان — نظام إدارة البقالة والمتجر الصغير" />
+    <meta property="og:description" content="دكان يساعدك على إدارة مبيعاتك ومخزونك وديون زبائنك وجردك وتقارير أرباحك، حتى بدون إنترنت." />
+    <meta property="og:type" content="website" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.rtl.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/bootstrap-icons.min.css" asp-append-version="true" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛒</text></svg>">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm sticky-top" aria-label="التنقل الرئيسي">
+            <div class="container">
+                <a class="navbar-brand d-flex align-items-center gap-2" asp-area="" asp-controller="Home" asp-action="Index">
+                    <span class="brand-mark" aria-hidden="true">د</span>
+                    <span class="brand-name">دكان</span>
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent"
+                        aria-controls="navbarContent" aria-expanded="false" aria-label="فتح القائمة">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse" id="navbarContent">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Home" asp-action="Index">الرئيسية</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#features">المزايا</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#pricing">الأسعار</a>
+                        </li>
+                    </ul>
+                    <a class="btn btn-primary" href="#subscribe">اطلب اشتراكك الآن</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main role="main">
+        @RenderBody()
+    </main>
+
+    <footer class="site-footer border-top">
+        <div class="container py-5">
+            <div class="row g-4">
+                <div class="col-12 col-md-6 col-lg-4">
+                    <p class="footer-brand mb-2">دكان</p>
+                    <p class="text-body-secondary mb-0">نظام إدارة البقالة والمتجر الصغير.</p>
+                </div>
+                <div class="col-12 col-md-6 col-lg-4">
+                    <p class="fw-semibold mb-2">تواصل معنا</p>
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-1">
+                            <a class="contact-link" href="tel:@ViewData["PhoneNumber"]" dir="ltr">
+                                <i class="bi bi-telephone me-1" aria-hidden="true"></i><span class="ms-1">@ViewData["PhoneNumber"]</span>
+                            </a>
+                        </li>
+                        <li class="mb-1">
+                            <a class="contact-link" href="https://wa.me/@ViewData["WhatsAppNumber"]" target="_blank" rel="noopener">
+                                <i class="bi bi-whatsapp me-1" aria-hidden="true"></i><span class="ms-1">واتساب</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-12 col-lg-4">
+                    <p class="fw-semibold mb-2">جاهز تبدأ؟</p>
+                    <a class="btn btn-primary" href="#subscribe">اطلب اشتراكك الآن</a>
+                </div>
+            </div>
+        </div>
+        <div class="container pb-4">
+            <p class="text-body-secondary small mb-0 text-center">
+                &copy; @DateTime.Now.Year دكان — جميع الحقوق محفوظة.
+            </p>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/dist/jquery.validate.unobtrusive.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

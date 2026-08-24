@@ -1,0 +1,79 @@
+@model Dukan.Web.Application.DTOs.SubscriptionRequestForm
+@{
+    ViewData["Title"] = "اطلب اشتراكك";
+    var plans = ViewData["Plans"] as IReadOnlyList<Dukan.Web.Domain.Entities.Plan> ?? [];
+}
+
+<section class="section bg-green-50">
+    <div class="container" style="max-width: 40rem;">
+        <h1 class="section-title text-center">اطلب اشتراكك الآن</h1>
+        <p class="section-sub mx-auto text-center mb-4">
+            املأ النموذج وسنتواصل معك عبر واتساب لإكمال الإجراءات.
+        </p>
+
+        @if (!ViewData.ModelState.IsValid && ViewData.ModelState[string.Empty] is { Errors.Count: > 0 } errorState)
+        {
+            <div class="alert alert-danger" role="alert">
+                @string.Join(" ", errorState.Errors.Select(e => e.ErrorMessage))
+            </div>
+        }
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <form method="post" asp-action="Index">
+                    <div asp-validation-summary="ModelOnly" class="text-danger d-none"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="FullName" class="form-label">الاسم الكامل *</label>
+                        <input asp-for="FullName" class="form-control" autocomplete="name" />
+                        <span asp-validation-for="FullName" class="field-validation-error"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="StoreName" class="form-label">اسم المتجر *</label>
+                        <input asp-for="StoreName" class="form-control" placeholder="مثال: سوبرماركت الأمانة" />
+                        <span asp-validation-for="StoreName" class="field-validation-error"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Phone" class="form-label">رقم الهاتف *</label>
+                        <input asp-for="Phone" class="form-control" dir="ltr" autocomplete="tel" inputmode="tel" />
+                        <span asp-validation-for="Phone" class="field-validation-error"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="WhatsAppNumber" class="form-label">رقم الواتساب *</label>
+                        <input asp-for="WhatsAppNumber" class="form-control" dir="ltr" autocomplete="tel" inputmode="tel" />
+                        <span asp-validation-for="WhatsAppNumber" class="field-validation-error"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="PlanId" class="form-label">الخطة المطلوبة *</label>
+                        <select asp-for="PlanId" class="form-select" required>
+                            <option value="">اختر الخطة…</option>
+                            @foreach (var plan in plans)
+                            {
+                                <option value="@plan.Id">@plan.Name — @Dukan.Web.Application.Display.DurationDisplay.Format(plan.Duration, plan.DurationUnit)@(plan.Price == 0 || plan.IsTrial ? " (مجاني)" : $" — {plan.Price.ToString("0.##")} {plan.Currency}")</option>
+                            }
+                        </select>
+                        <span asp-validation-for="PlanId" class="field-validation-error"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="Notes" class="form-label">ملاحظات</label>
+                        <textarea asp-for="Notes" class="form-control" rows="3"></textarea>
+                        <span asp-validation-for="Notes" class="field-validation-error"></span>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">إرسال الطلب</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
