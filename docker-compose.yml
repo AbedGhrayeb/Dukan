@@ -44,7 +44,8 @@ services:
       - MSSQL_SA_PASSWORD=${SA_PASSWORD:-YourStrong!Passw0rd}
       - MSSQL_PID=Developer
     ports:
-      - "${DB_PORT:-1433}:1433"
+      # Bind host port to loopback only — DB not exposed on public interfaces (best practice)
+      - "${DB_BIND:-127.0.0.1}:${DB_PORT:-1433}:1433"
     volumes:
       - dukan-mssql-data:/var/opt/mssql
     healthcheck:
