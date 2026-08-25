@@ -31,7 +31,8 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole<Guid>>(options =>
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
-var cookieSecurePolicy = builder.Environment.IsProduction()
+var disableHttpsRedirect = string.Equals(Environment.GetEnvironmentVariable("DISABLE_HTTPS_REDIRECT"), "true", StringComparison.OrdinalIgnoreCase);
+var cookieSecurePolicy = builder.Environment.IsProduction() && !disableHttpsRedirect
     ? CookieSecurePolicy.Always
     : CookieSecurePolicy.SameAsRequest;
 
@@ -44,6 +45,13 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.Cookie.SecurePolicy = cookieSecurePolicy;
     options.ExpireTimeSpan = TimeSpan.FromHours(8);
     options.SlidingExpiration = true;
+});
+
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto;
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
 });
 
 builder.Services.AddHttpContextAccessor();
@@ -100,6 +108,8 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseStatusCodePagesWithReExecute("/Home/Error", "?statusCode={0}");
+
+app.UseForwardedHeaders();
 
 // In Docker / behind reverse proxy, HTTPS is terminated at the proxy
 // Set DISABLE_HTTPS_REDIRECT=true in docker-compose to avoid redirect loop on http://+:8080
